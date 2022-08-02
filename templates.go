@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"io/fs"
+	"net/http"
 	"path/filepath"
 	"text/template"
 
@@ -36,4 +38,21 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	}
 
 	return cache, nil
+}
+
+func (app *application) renderTemplate(w http.ResponseWriter, statusCode int, page string, data *templateData) {
+	tmpl, ok := app.templateCache[page]
+	if !ok {
+		err := fmt.Errorf("the template %s does not exist", page)
+		app.serverError(w, err)
+		return
+	}
+
+	w.WriteHeader(statusCode)
+
+	err := tmpl.ExecuteTemplate(w, "layout", data)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
 }

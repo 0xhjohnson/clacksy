@@ -5,5 +5,5 @@ import (
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	app.render(w, http.StatusOK, "home.tmpl", &templateData{})
+	app.renderTemplate(w, http.StatusOK, "home.tmpl", &templateData{})
 }
