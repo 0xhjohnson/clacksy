@@ -1,4 +1,4 @@
-name: Sync Deploy
+name: Deploy
 on:
   push:
     branches:
@@ -7,15 +7,29 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16]
     steps:
       - uses: actions/checkout@v2
+      - uses: pnpm/action-setup@v2.2.2
+        with:
+          version: 7
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build css file
+        run: pnpm build:css
       - uses: sylwit/install-b2-cli-action@v1.0.0
         env:
           B2_APPLICATION_KEY_ID: ${{ secrets.B2_APPLICATION_KEY_ID }}
           B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
-      - name: Sync
+      - name: Sync static assets
         run: b2 sync ./ui/static b2://clacksy
-
   deploy:
     runs-on: ubuntu-latest
     steps:
