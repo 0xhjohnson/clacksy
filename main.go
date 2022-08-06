@@ -8,6 +8,9 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/0xhjohnson/clacksy/models"
+	"github.com/alexedwards/scs/pgxstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/jackc/pgtype"
 	pgtypeuuid "github.com/jackc/pgtype/ext/gofrs-uuid"
 	"github.com/jackc/pgx/v4"
@@ -15,9 +18,11 @@ import (
 )
 
 type application struct {
-	errorLog      *log.Logger
-	infoLog       *log.Logger
-	templateCache map[string]*template.Template
+	errorLog       *log.Logger
+	infoLog        *log.Logger
+	sessionManager *scs.SessionManager
+	templateCache  map[string]*template.Template
+	users          *models.UserModel
 }
 
 func main() {
@@ -43,10 +48,16 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	sessionManager := scs.New()
+	sessionManager.Store = pgxstore.New(dbpool)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	app := &application{
-		errorLog:      errorLog,
-		infoLog:       infoLog,
-		templateCache: templateCache,
+		errorLog:       errorLog,
+		infoLog:        infoLog,
+		sessionManager: sessionManager,
+		templateCache:  templateCache,
+		users:          &models.UserModel{DB: dbpool},
 	}
 
 	srv := &http.Server{

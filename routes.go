@@ -21,6 +21,13 @@ func (app *application) routes() http.Handler {
 
 	r.Get("/", app.home)
 
+	r.Route("/user", func(r chi.Router) {
+		r.Use(app.sessionManager.LoadAndSave)
+		r.Get("/new", app.newUserForm)
+		r.Post("/new", app.addNewUser)
+		r.Get("/login", app.loginUserForm)
+	})
+
 	fileServer := http.FileServer(http.FS(ui.Files))
 	r.Handle("/static/*", fileServer)
 

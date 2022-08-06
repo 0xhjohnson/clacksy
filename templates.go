@@ -10,7 +10,10 @@ import (
 	"github.com/0xhjohnson/clacksy/ui"
 )
 
-type templateData struct{}
+type templateData struct {
+	Form  any
+	Flash string
+}
 
 func newTemplateCache() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
@@ -38,6 +41,12 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	}
 
 	return cache, nil
+}
+
+func (app *application) newTemplateData(r *http.Request) *templateData {
+	return &templateData{
+		Flash: app.sessionManager.PopString(r.Context(), "flash"),
+	}
 }
 
 func (app *application) renderTemplate(w http.ResponseWriter, statusCode int, page string, data *templateData) {

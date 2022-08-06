@@ -1,30 +1,34 @@
-{{define "layout"}}
-<!doctype html>
-<html class="h-full" lang="en">
+{{ define "layout" }}
+  <!DOCTYPE html>
+  <html class="h-full" lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <title>{{ template "title" . }} - clacksy</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<head>
-  <meta charset="utf-8">
-  <title>{{template "title" .}} - clacksy</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta property="og:title" content="" />
+      <meta property="og:type" content="" />
+      <meta property="og:url" content="" />
+      <meta property="og:image" content="" />
 
-  <meta property="og:title" content="">
-  <meta property="og:type" content="">
-  <meta property="og:url" content="">
-  <meta property="og:image" content="">
+      <link
+        rel="icon"
+        href="https://cdn.clacksy.com/file/clacksy/favicon.ico"
+        type="image/x-icon"
+      />
+      <link
+        href="https://cdn.clacksy.com/file/clacksy/css/main.css"
+        rel="stylesheet"
+      />
+    </head>
 
-  <link rel="icon" href="https://cdn.clacksy.com/file/clacksy/favicon.ico" type="image/x-icon">
-  <link href="https://cdn.clacksy.com/file/clacksy/css/main.css" rel="stylesheet">
-</head>
-
-<body class="h-full bg-white font-sans antialiased">
-  <header>
-    <h1><a href="/">home</a></h1>
-  </header>
-  {{template "nav" .}}
-  <main>
-    {{template "main" .}}
-  </main>
-</body>
-
-</html>
-{{end}}
+    <body class="h-full bg-white font-sans antialiased">
+      <main class="h-full">
+        {{ with .Flash }}
+          <div>{{ . }}</div>
+        {{ end }}
+        {{ template "main" . }}
+      </main>
+    </body>
+  </html>
+{{ end }}
