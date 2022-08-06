@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"os"
 	"path/filepath"
 	"text/template"
 
@@ -11,8 +12,9 @@ import (
 )
 
 type templateData struct {
-	Form  any
-	Flash string
+	Form       any
+	Flash      string
+	StaticPath string
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -44,8 +46,17 @@ func newTemplateCache() (map[string]*template.Template, error) {
 }
 
 func (app *application) newTemplateData(r *http.Request) *templateData {
+	var staticPath string
+
+	if os.Getenv("APP_ENV") == "production" {
+		staticPath = "https://cdn.clacksy.com/file/clacksy"
+	} else {
+		staticPath = "/static"
+	}
+
 	return &templateData{
-		Flash: app.sessionManager.PopString(r.Context(), "flash"),
+		Flash:      app.sessionManager.PopString(r.Context(), "flash"),
+		StaticPath: staticPath,
 	}
 }
 

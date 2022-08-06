@@ -19,7 +19,7 @@ func (app *application) routes() http.Handler {
 
 	r.Use(middleware.Timeout(30 * time.Second))
 
-	r.Get("/", app.home)
+	r.With(app.sessionManager.LoadAndSave).Get("/", app.home)
 
 	r.Route("/user", func(r chi.Router) {
 		r.Use(app.sessionManager.LoadAndSave)

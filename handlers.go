@@ -10,7 +10,8 @@ import (
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	app.renderTemplate(w, http.StatusOK, "home.tmpl", &templateData{})
+	data := app.newTemplateData(r)
+	app.renderTemplate(w, http.StatusOK, "home.tmpl", data)
 }
 
 type signupForm struct {
