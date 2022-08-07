@@ -15,6 +15,8 @@ type templateData struct {
 	Form       any
 	Flash      string
 	StaticPath string
+	URLPath    string
+	AppEnv     string
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -47,8 +49,9 @@ func newTemplateCache() (map[string]*template.Template, error) {
 
 func (app *application) newTemplateData(r *http.Request) *templateData {
 	var staticPath string
+	appEnv := os.Getenv("APP_ENV")
 
-	if os.Getenv("APP_ENV") == "production" {
+	if appEnv == "production" {
 		staticPath = "https://cdn.clacksy.com/file/clacksy"
 	} else {
 		staticPath = "/static"
@@ -57,6 +60,8 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
 		Flash:      app.sessionManager.PopString(r.Context(), "flash"),
 		StaticPath: staticPath,
+		URLPath:    r.URL.Path,
+		AppEnv:     appEnv,
 	}
 }
 

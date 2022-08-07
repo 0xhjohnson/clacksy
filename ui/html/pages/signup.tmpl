@@ -1,12 +1,12 @@
-{{ define "title" }}signup{{ end }}
+{{ define "title" }}sign up{{ end }}
 {{ define "header-title" }}Sign up for free account{{ end }}
 {{ define "header-link" }}/user/login{{ end }}
 {{ define "header-subtitle" }}sign in to existing account{{ end }}
 
 {{ define "main" }}
-  <div class="flex min-h-full">
+  <div class="flex">
     <div
-      class="flex flex-1 flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24"
+      class="flex flex-1 flex-col justify-center py-12 px-4 sm:px-6 md:flex-none md:pl-0 lg:pr-20 xl:pr-24"
     >
       <div class="mx-auto w-full max-w-sm lg:w-96">
         {{ template "auth-header" . }}
@@ -51,31 +51,6 @@
                 {{ end }}
               </div>
             </div>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  class="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
-                />
-                <label
-                  htmlFor="remember-me"
-                  class="ml-2 block text-sm text-gray-900"
-                >
-                  Remember me
-                </label>
-              </div>
-
-              <div class="text-sm">
-                <a
-                  href="#"
-                  class="font-medium text-pink-600 hover:text-pink-500"
-                >
-                  Forgot your password?
-                </a>
-              </div>
-            </div>
             <div>
               <button
                 type="submit"
@@ -88,10 +63,8 @@
         </div>
       </div>
     </div>
-    <div class="relative hidden w-0 flex-1 lg:block">
-      <div
-        class="absolute inset-0 h-full w-full bg-gradient-to-r from-pink-300 to-orange-100"
-      />
+    <div class="relative hidden w-0 flex-1 md:block">
+      <img class="absolute inset-0 h-full w-full" src="{{ .StaticPath }}/assets/chubbs-hello.svg" alt="friendly greeting from chubbs character" />
     </div>
   </div>
 {{ end }}
