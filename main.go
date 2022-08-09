@@ -80,11 +80,6 @@ func openDbPool(dsn string) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	pool, err := pgxpool.ConnectConfig(context.Background(), config)
-	if err != nil {
-		return nil, err
-	}
-
 	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
 		conn.ConnInfo().RegisterDataType(pgtype.DataType{
 			Value: &pgtypeuuid.UUID{},
@@ -92,6 +87,11 @@ func openDbPool(dsn string) (*pgxpool.Pool, error) {
 			OID:   pgtype.UUIDOID,
 		})
 		return nil
+	}
+
+	pool, err := pgxpool.ConnectConfig(context.Background(), config)
+	if err != nil {
+		return nil, err
 	}
 
 	err = pool.Ping(context.Background())

@@ -7,20 +7,21 @@ import (
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
-	pgtypeuuid "github.com/jackc/pgtype/ext/gofrs-uuid"
+	uuid "github.com/jackc/pgtype/ext/gofrs-uuid"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	ID              pgtypeuuid.UUID
+	ID              uuid.UUID
 	Email           string
 	HashedPassword  []byte
 	Created         time.Time
 	LastUpdated     time.Time
 	Name            string
 	Username        string
-	GenderPronounID pgtypeuuid.UUID
+	GenderPronounID uuid.UUID
 }
 
 type UserModel struct {
@@ -49,4 +50,31 @@ func (m *UserModel) Insert(email, password string) error {
 	}
 
 	return nil
+}
+
+func (m *UserModel) Authenticate(email, password string) (uuid.UUID, error) {
+	var userID uuid.UUID
+	var hashedPassword []byte
+
+	stmt := `SELECT user_profile_id, hashed_password
+		FROM user_profile
+		WHERE email = $1`
+
+	err := m.DB.QueryRow(context.Background(), stmt, email).Scan(&userID, &hashedPassword)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return userID, ErrInvalidCredentials
+		}
+		return userID, err
+	}
+
+	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
+	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return userID, ErrInvalidCredentials
+		}
+		return userID, err
+	}
+
+	return userID, nil
 }

@@ -26,6 +26,7 @@ func (app *application) routes() http.Handler {
 		r.Get("/new", app.newUserForm)
 		r.Post("/new", app.addNewUser)
 		r.Get("/login", app.loginUserForm)
+		r.Post("/login", app.loginUser)
 	})
 
 	fileServer := http.FileServer(http.FS(ui.Files))
