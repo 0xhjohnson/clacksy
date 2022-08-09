@@ -22,3 +22,6 @@
 
 # Built css file
 /ui/static/css/main.css
+
+# tmp files
+/tmp

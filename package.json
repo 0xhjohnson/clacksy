@@ -1,8 +1,7 @@
 {
   "scripts": {
     "build:css": "NODE_ENV=production postcss ./ui/static/css/tailwind.css -o ./ui/static/css/main.css",
-    "build:css:dev": "NODE_ENV=development postcss ./ui/static/css/tailwind.css -o ./ui/static/css/main.css",
-    "watch:css": "chokidar \"./ui/html/**/*.tmpl\" -c \"pnpm build:css:dev\""
+    "build:css:dev": "NODE_ENV=development postcss ./ui/static/css/tailwind.css -o ./ui/static/css/main.css"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.2",
@@ -11,8 +10,5 @@
     "postcss": "^8.4.14",
     "postcss-cli": "^10.0.0",
     "tailwindcss": "^3.1.7"
-  },
-  "dependencies": {
-    "chokidar-cli": "^3.0.0"
   }
 }
