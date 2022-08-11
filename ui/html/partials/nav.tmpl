@@ -81,13 +81,14 @@
                   tabindex="-1"
                   >Your profile</a
                 >
-                <a
-                  href="/user/logout"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  role="menuitem"
-                  tabindex="-1"
-                  >Sign out</a
-                >
+                <form action="/user/logout" method="POST">
+                  <button
+                    type="submit"
+                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    role="menuitem"
+                    tabindex="-1"
+                    >Sign out</button>
+                </form>
               </div>
             </div>
           </div>
@@ -197,11 +198,12 @@
             {{ end }}
             >Your profile</a
           >
-          <a
-            href="/user/logout"
-            class="block px-3 py-2 rounded-md text-base font-medium text-gray-400 hover:text-white hover:bg-gray-700"
-            >Sign out</a
-          >
+          <form action="/user/logout" method="POST">
+            <button
+              type="submit"
+              class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-400 hover:text-white hover:bg-gray-700"
+              >Sign out</button>
+          </form>
         </div>
       </div>
     </div>
