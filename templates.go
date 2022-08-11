@@ -12,11 +12,12 @@ import (
 )
 
 type templateData struct {
-	Form       any
-	Flash      string
-	StaticPath string
-	URLPath    string
-	AppEnv     string
+	Form            any
+	Flash           string
+	StaticPath      string
+	URLPath         string
+	AppEnv          string
+	IsAuthenticated bool
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -58,10 +59,11 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 	}
 
 	return &templateData{
-		Flash:      app.sessionManager.PopString(r.Context(), "flash"),
-		StaticPath: staticPath,
-		URLPath:    r.URL.Path,
-		AppEnv:     appEnv,
+		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
+		StaticPath:      staticPath,
+		URLPath:         r.URL.Path,
+		AppEnv:          appEnv,
+		IsAuthenticated: app.isAuthenticated(r),
 	}
 }
 
