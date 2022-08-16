@@ -38,6 +38,16 @@
                 {{ end }}
                 >Sign in</a
               >
+              <a
+                href="/soundtest/new"
+                {{ if eq .URLPath "/soundtest/new" }}
+                  class="bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium"
+                  aria-current="page"
+                {{ else }}
+                  class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                {{ end }}
+                >Add soundtest</a
+              >
             </div>
           </div>
         </div>
@@ -174,6 +184,16 @@
             class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
           {{ end }}
           >Sign in</a
+        >
+        <a
+          href="/soundtest/new"
+          {{ if eq .URLPath "/soundtest/new" }}
+            class="bg-gray-900 text-white block px-3 py-2 rounded-md text-base font-medium"
+            aria-current="page"
+          {{ else }}
+            class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+          {{ end }}
+          >Add soundtest</a
         >
       </div>
       {{ if .IsAuthenticated }}

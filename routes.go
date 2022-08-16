@@ -16,18 +16,25 @@ func (app *application) routes() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-
 	r.Use(middleware.Timeout(30 * time.Second))
 
 	r.With(app.sessionManager.LoadAndSave).Get("/", app.home)
 
 	r.Route("/user", func(r chi.Router) {
 		r.Use(app.sessionManager.LoadAndSave)
+
 		r.Get("/new", app.newUserForm)
 		r.Post("/new", app.addNewUser)
 		r.Get("/login", app.loginUserForm)
 		r.Post("/login", app.loginUser)
 		r.Post("/logout", app.logoutUser)
+	})
+
+	r.Route("/soundtest", func(r chi.Router) {
+		r.Use(app.sessionManager.LoadAndSave)
+
+		r.Get("/new", app.addSoundtestForm)
+		r.Post("/new", app.addSoundtest)
 	})
 
 	fileServer := http.FileServer(http.FS(ui.Files))

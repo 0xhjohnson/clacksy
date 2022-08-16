@@ -23,6 +23,8 @@ type application struct {
 	sessionManager *scs.SessionManager
 	templateCache  map[string]*template.Template
 	users          *models.UserModel
+	soundtests     *models.SoundTestModel
+	parts          *models.PartsModel
 }
 
 func main() {
@@ -58,6 +60,8 @@ func main() {
 		sessionManager: sessionManager,
 		templateCache:  templateCache,
 		users:          &models.UserModel{DB: dbpool},
+		soundtests:     &models.SoundTestModel{DB: dbpool},
+		parts:          &models.PartsModel{DB: dbpool},
 	}
 
 	srv := &http.Server{

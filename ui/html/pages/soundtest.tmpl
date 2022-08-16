@@ -1,0 +1,112 @@
+{{define "title"}}add soundtest{{end}}
+
+{{define "main"}}
+  <div class="py-4 sm:py-6">
+    <div class="md:grid md:grid-cols-3 md:gap-6">
+      <div class="md:col-span-1">
+        <div class="px-4 sm:px-0">
+          <h3 class="text-lg font-medium leading-6 text-gray-900">Sound test info</h3>
+          <p class="mt-1 text-sm text-gray-600">This information will be displayed publicly.</p>
+        </div>
+      </div>
+      <div class="mt-5 md:mt-0 md:col-span-2">
+        <form enctype="multipart/form-data" action="/soundtest/new" method="POST">
+          <div class="shadow sm:rounded-md sm:overflow-hidden">
+            <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
+
+              <div class="grid grid-cols-4 gap-6">
+                <div class="col-span-4 sm:col-span-3">
+                  <label for="keyboard" class="block text-sm font-medium text-gray-700">Keyboard</label>
+                  <select
+                    id="keyboard"
+                    name="keyboard"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                    required
+                  >
+                    <option value=""></option>
+                    {{ range .Form.Parts.Keyboards }}
+                      <option value="{{ .ID }}"{{ if uuidEq $.Form.Keyboard .ID }} selected{{ end }}>{{ .Name }}</option>
+                    {{ end }}
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-4 gap-6">
+                <div class="col-span-4 sm:col-span-3">
+                  <label for="keyswitch" class="block text-sm font-medium text-gray-700">Switches</label>
+                  <select
+                    id="keyswitch"
+                    name="keyswitch"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                    required
+                  >
+                    <option value=""></option>
+                    {{ range .Form.Parts.Switches }}
+                      <option value="{{ .ID }}"{{ if uuidEq $.Form.Keyswitch .ID }} selected{{ end }}>{{ .Name }}</option>
+                    {{ end }}
+                  </select>
+                </div>
+              </div>
+            
+              <div class="grid grid-cols-4 gap-6">
+                <div class="col-span-4 sm:col-span-2">
+                  <label for="plate-material" class="block text-sm font-medium text-gray-700">Plate material</label>
+                  <select
+                    id="plate-material"
+                    name="plate-material"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                    required
+                  >
+                    <option value=""></option>
+                    {{ range .Form.Parts.PlateMaterials }}
+                      <option value="{{ .ID }}"{{ if uuidEq $.Form.PlateMaterial .ID }} selected{{ end }}>{{ .Name }}</option>
+                    {{ end }}
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-4 gap-6">
+                <div class="col-span-4 sm:col-span-2">
+                  <label for="keycap-material" class="block text-sm font-medium text-gray-700">Keycap material</label>
+                  <select
+                    id="keycap-material"
+                    name="keycap-material"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                    required
+                  >
+                    <option value=""></option>
+                    {{ range .Form.Parts.KeycapMaterials }}
+                      <option value="{{ .ID }}"{{ if uuidEq $.Form.KeycapMaterial .ID }} selected{{ end }}>{{ .Name }}</option>
+                    {{ end }}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Sound test</label>
+                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <div class="space-y-1 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <div class="flex text-sm text-gray-600">
+                      <label for="soundtest" class="relative cursor-pointer bg-white rounded-md text-sm font-medium text-pink-600 hover:text-pink-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-pink-500">
+                        <span>Upload a file</span>
+                        <input id="soundtest" name="soundtest" type="file" class="sr-only" required />
+                      </label>
+                      <p class="pl-1">or drag and drop</p>
+                    </div>
+                    <p class="text-xs text-gray-500">Audio, video files supported</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+              <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">Save</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{{end}}

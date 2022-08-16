@@ -142,3 +142,89 @@ func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
+type soundtestForm struct {
+	Keyboard       string
+	Keyswitch      string
+	PlateMaterial  string
+	KeycapMaterial string
+	Parts          models.AllParts
+	validator.Validator
+}
+
+func (app *application) addSoundtestForm(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+
+	keebParts, err := app.parts.GetAll()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	data.Form = soundtestForm{
+		Parts: models.AllParts{
+			Keyboards:       keebParts.Keyboards,
+			Switches:        keebParts.Switches,
+			PlateMaterials:  keebParts.PlateMaterials,
+			KeycapMaterials: keebParts.KeycapMaterials,
+		},
+	}
+	app.renderTemplate(w, http.StatusOK, "soundtest.tmpl", data)
+}
+
+func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	file, _, err := r.FormFile("soundtest")
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	defer file.Close()
+
+	keebParts, err := app.parts.GetAll()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	form := soundtestForm{
+		Keyboard:       r.PostForm.Get("keyboard"),
+		Keyswitch:      r.PostForm.Get("keyswitch"),
+		PlateMaterial:  r.PostForm.Get("plate-material"),
+		KeycapMaterial: r.PostForm.Get("keycap-material"),
+		Parts: models.AllParts{
+			Keyboards:       keebParts.Keyboards,
+			Switches:        keebParts.Switches,
+			PlateMaterials:  keebParts.PlateMaterials,
+			KeycapMaterials: keebParts.KeycapMaterials,
+		},
+	}
+
+	form.CheckField(validator.NotBlank(form.Keyboard), "keyboard", "This field cannnot be blank")
+	form.CheckField(validator.NotBlank(form.Keyswitch), "keyswitch", "This field cannnot be blank")
+	form.CheckField(validator.NotBlank(form.PlateMaterial), "plate-material", "This field cannnot be blank")
+	form.CheckField(validator.NotBlank(form.KeycapMaterial), "keycap-material", "This field cannnot be blank")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.renderTemplate(w, http.StatusUnprocessableEntity, "soundtest.tmpl", data)
+		return
+	}
+
+	err = app.soundtests.Insert("/fileURL", form.Keyboard, form.PlateMaterial, form.KeycapMaterial, form.Keyswitch, app.sessionManager.GetString(r.Context(), "authenticatedUserID"))
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Your soundtest was added successfully")
+
+	http.Redirect(w, r, "/soundtest/new", http.StatusSeeOther)
+}
