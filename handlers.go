@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/0xhjohnson/clacksy/models"
@@ -89,7 +88,7 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form := signupForm{
+	form := loginForm{
 		Email:    r.PostForm.Get("email"),
 		Password: r.PostForm.Get("password"),
 	}
@@ -126,7 +125,7 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "authenticatedUserID", fmt.Sprintf("%x", userID.Get()))
+	app.sessionManager.Put(r.Context(), "authenticatedUserID", userID.String())
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

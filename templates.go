@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/0xhjohnson/clacksy/ui"
+	"github.com/gofrs/uuid"
 )
 
 type templateData struct {
@@ -37,7 +38,13 @@ func newTemplateCache() (map[string]*template.Template, error) {
 			page,
 		}
 
-		ts, err := template.New(name).ParseFS(ui.Files, patterns...)
+		funcMap := template.FuncMap{
+			"uuidEq": func(s string, u uuid.UUID) bool {
+				return s == u.String()
+			},
+		}
+
+		ts, err := template.New(name).Funcs(funcMap).ParseFS(ui.Files, patterns...)
 		if err != nil {
 			return nil, err
 		}

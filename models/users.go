@@ -5,9 +5,9 @@ import (
 	"errors"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
-	uuid "github.com/jackc/pgtype/ext/gofrs-uuid"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"golang.org/x/crypto/bcrypt"

@@ -6,6 +6,7 @@ require (
 	github.com/alexedwards/scs/pgxstore v0.0.0-20220528130143-d93ace5be94b
 	github.com/alexedwards/scs/v2 v2.5.0
 	github.com/go-chi/chi/v5 v5.0.7
+	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/jackc/pgconn v1.12.1
 	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa
 	github.com/jackc/pgtype v1.11.0
@@ -14,7 +15,6 @@ require (
 )
 
 require (
-	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
