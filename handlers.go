@@ -3,9 +3,13 @@ package main
 import (
 	"errors"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/0xhjohnson/clacksy/models"
 	"github.com/0xhjohnson/clacksy/validator"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -179,7 +183,7 @@ func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, _, err := r.FormFile("soundtest")
+	file, fileHeader, err := r.FormFile("soundtest")
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
@@ -218,7 +222,20 @@ func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.soundtests.Insert("/fileURL", form.Keyboard, form.PlateMaterial, form.KeycapMaterial, form.Keyswitch, app.sessionManager.GetString(r.Context(), "authenticatedUserID"))
+	userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
+	objKey := filepath.Join("soundtests", userID, fileHeader.Filename)
+
+	_, err = app.s3Client.PutObject(&s3.PutObjectInput{
+		Body:   file,
+		Bucket: aws.String(os.Getenv("B2_BUCKET")),
+		Key:    aws.String(objKey),
+	})
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	err = app.soundtests.Insert(objKey, form.Keyboard, form.PlateMaterial, form.KeycapMaterial, form.Keyswitch, userID)
 	if err != nil {
 		app.serverError(w, err)
 		return

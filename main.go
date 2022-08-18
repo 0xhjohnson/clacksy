@@ -11,6 +11,10 @@ import (
 	"github.com/0xhjohnson/clacksy/models"
 	"github.com/alexedwards/scs/pgxstore"
 	"github.com/alexedwards/scs/v2"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/jackc/pgtype"
 	pgtypeuuid "github.com/jackc/pgtype/ext/gofrs-uuid"
 	"github.com/jackc/pgx/v4"
@@ -25,6 +29,7 @@ type application struct {
 	users          *models.UserModel
 	soundtests     *models.SoundTestModel
 	parts          *models.PartsModel
+	s3Client       *s3.S3
 }
 
 func main() {
@@ -54,6 +59,15 @@ func main() {
 	sessionManager.Store = pgxstore.New(dbpool)
 	sessionManager.Lifetime = 12 * time.Hour
 
+	s3Config := &aws.Config{
+		Credentials:      credentials.NewStaticCredentials(os.Getenv("B2_KEY_ID"), os.Getenv("B2_APP_KEY"), ""),
+		Endpoint:         aws.String("s3.us-west-004.backblazeb2.com"),
+		Region:           aws.String("us-west-004"),
+		S3ForcePathStyle: aws.Bool(true),
+	}
+	sess := session.Must(session.NewSession(s3Config))
+	s3Client := s3.New(sess)
+
 	app := &application{
 		errorLog:       errorLog,
 		infoLog:        infoLog,
@@ -62,6 +76,7 @@ func main() {
 		users:          &models.UserModel{DB: dbpool},
 		soundtests:     &models.SoundTestModel{DB: dbpool},
 		parts:          &models.PartsModel{DB: dbpool},
+		s3Client:       s3Client,
 	}
 
 	srv := &http.Server{
