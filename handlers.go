@@ -2,9 +2,11 @@ package main
 
 import (
 	"errors"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/0xhjohnson/clacksy/models"
 	"github.com/0xhjohnson/clacksy/validator"
@@ -177,11 +179,14 @@ func (app *application) addSoundtestForm(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(32 << 20)
+	r.Body = http.MaxBytesReader(w, r.Body, 24<<20)
+	err := r.ParseMultipartForm(24 << 20)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+
+	defer r.MultipartForm.RemoveAll()
 
 	file, fileHeader, err := r.FormFile("soundtest")
 	if err != nil {
@@ -190,6 +195,25 @@ func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer file.Close()
+
+	buff := make([]byte, 512)
+	_, err = file.Read(buff)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	filetype := http.DetectContentType(buff)
+	if !strings.Contains(filetype, "audio") {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	_, err = file.Seek(0, io.SeekStart)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
 
 	keebParts, err := app.parts.GetAll()
 	if err != nil {
