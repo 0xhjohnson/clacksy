@@ -18,10 +18,10 @@ func (app *application) routes() http.Handler {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(30 * time.Second))
 
-	r.With(app.sessionManager.LoadAndSave).Get("/", app.home)
+	r.With(app.sessionManager.LoadAndSave, app.authenticate).Get("/", app.home)
 
 	r.Route("/user", func(r chi.Router) {
-		r.Use(app.sessionManager.LoadAndSave)
+		r.Use(app.sessionManager.LoadAndSave, app.authenticate)
 
 		r.Get("/new", app.newUserForm)
 		r.Post("/new", app.addNewUser)
@@ -32,7 +32,7 @@ func (app *application) routes() http.Handler {
 	})
 
 	r.Route("/soundtest", func(r chi.Router) {
-		r.Use(app.sessionManager.LoadAndSave)
+		r.Use(app.sessionManager.LoadAndSave, app.authenticate)
 		r.Use(app.requireAuth)
 
 		r.Get("/new", app.addSoundtestForm)
