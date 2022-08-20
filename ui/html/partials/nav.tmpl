@@ -8,46 +8,45 @@
           </div>
           <div class="hidden md:block">
             <div class="ml-10 flex items-baseline space-x-4">
-              <a
-                href="/"
-                {{ if eq .URLPath "/" }}
-                  class="bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium"
-                  aria-current="page"
-                {{ else }}
-                  class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                {{ end }}
-                >Home</a
-              >
-              <a
-                href="/user/new"
-                {{ if eq .URLPath "/user/new" }}
-                  class="bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium"
-                  aria-current="page"
-                {{ else }}
-                  class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                {{ end }}
-                >Sign up</a
-              >
-              <a
-                href="/user/login"
-                {{ if eq .URLPath "/user/login" }}
-                  class="bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium"
-                  aria-current="page"
-                {{ else }}
-                  class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                {{ end }}
-                >Sign in</a
-              >
-              <a
-                href="/soundtest/new"
-                {{ if eq .URLPath "/soundtest/new" }}
-                  class="bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium"
-                  aria-current="page"
-                {{ else }}
-                  class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                {{ end }}
-                >Add soundtest</a
-              >
+              {{ if .IsAuthenticated }}
+                <a
+                  href="/soundtest/new"
+                  {{ if eq .URLPath "/soundtest/new" }}
+                    class="bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium"
+                    aria-current="page"
+                  {{ else }}
+                    class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                  {{ end }}
+                  >Add soundtest</a>
+              {{ else }}
+                <a
+                  href="/"
+                  {{ if eq .URLPath "/" }}
+                    class="bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium"
+                    aria-current="page"
+                  {{ else }}
+                    class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                  {{ end }}
+                  >Home</a>
+                <a
+                  href="/user/new"
+                  {{ if eq .URLPath "/user/new" }}
+                    class="bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium"
+                    aria-current="page"
+                  {{ else }}
+                    class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                  {{ end }}
+                  >Sign up</a>
+                <a
+                  href="/user/login"
+                  {{ if eq .URLPath "/user/login" }}
+                    class="bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium"
+                    aria-current="page"
+                  {{ else }}
+                    class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                  {{ end }}
+                  >Sign in</a>
+              {{ end }}
             </div>
           </div>
         </div>
@@ -155,46 +154,45 @@
     </div>
     <div class="md:hidden" id="mobile-menu" x-cloak x-show="isMobileMenuOpen">
       <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-        <a
-          href="/"
-          {{ if eq .URLPath "/" }}
-            class="bg-gray-900 text-white block px-3 py-2 rounded-md text-base font-medium"
-            aria-current="page"
-          {{ else }}
-            class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
-          {{ end }}
-          >Home</a
-        >
-        <a
-          href="/user/new"
-          {{ if eq .URLPath "/user/new" }}
-            class="bg-gray-900 text-white block px-3 py-2 rounded-md text-base font-medium"
-            aria-current="page"
-          {{ else }}
-            class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
-          {{ end }}
-          >Sign up</a
-        >
-        <a
-          href="/user/login"
-          {{ if eq .URLPath "/user/login" }}
-            class="bg-gray-900 text-white block px-3 py-2 rounded-md text-base font-medium"
-            aria-current="page"
-          {{ else }}
-            class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
-          {{ end }}
-          >Sign in</a
-        >
-        <a
-          href="/soundtest/new"
-          {{ if eq .URLPath "/soundtest/new" }}
-            class="bg-gray-900 text-white block px-3 py-2 rounded-md text-base font-medium"
-            aria-current="page"
-          {{ else }}
-            class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
-          {{ end }}
-          >Add soundtest</a
-        >
+        {{ if .IsAuthenticated }}
+          <a
+            href="/soundtest/new"
+            {{ if eq .URLPath "/soundtest/new" }}
+              class="bg-gray-900 text-white block px-3 py-2 rounded-md text-base font-medium"
+              aria-current="page"
+            {{ else }}
+              class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+            {{ end }}
+            >Add soundtest</a>
+        {{ else }}
+          <a
+            href="/"
+            {{ if eq .URLPath "/" }}
+              class="bg-gray-900 text-white block px-3 py-2 rounded-md text-base font-medium"
+              aria-current="page"
+            {{ else }}
+              class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+            {{ end }}
+            >Home</a>
+          <a
+            href="/user/new"
+            {{ if eq .URLPath "/user/new" }}
+              class="bg-gray-900 text-white block px-3 py-2 rounded-md text-base font-medium"
+              aria-current="page"
+            {{ else }}
+              class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+            {{ end }}
+            >Sign up</a>
+          <a
+            href="/user/login"
+            {{ if eq .URLPath "/user/login" }}
+              class="bg-gray-900 text-white block px-3 py-2 rounded-md text-base font-medium"
+              aria-current="page"
+            {{ else }}
+              class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+            {{ end }}
+            >Sign in</a>
+        {{ end }}
       </div>
       {{ if .IsAuthenticated }}
         <div class="pt-4 pb-3 border-t border-gray-700">
