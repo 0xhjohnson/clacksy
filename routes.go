@@ -27,11 +27,13 @@ func (app *application) routes() http.Handler {
 		r.Post("/new", app.addNewUser)
 		r.Get("/login", app.loginUserForm)
 		r.Post("/login", app.loginUser)
-		r.Post("/logout", app.logoutUser)
+
+		r.With(app.requireAuth).Post("/logout", app.logoutUser)
 	})
 
 	r.Route("/soundtest", func(r chi.Router) {
 		r.Use(app.sessionManager.LoadAndSave)
+		r.Use(app.requireAuth)
 
 		r.Get("/new", app.addSoundtestForm)
 		r.Post("/new", app.addSoundtest)
