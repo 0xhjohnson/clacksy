@@ -21,6 +21,10 @@ type templateData struct {
 	IsAuthenticated bool
 }
 
+func uuidEq(s string, u uuid.UUID) bool {
+	return s == u.String()
+}
+
 func newTemplateCache() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
 
@@ -39,9 +43,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		}
 
 		funcMap := template.FuncMap{
-			"uuidEq": func(s string, u uuid.UUID) bool {
-				return s == u.String()
-			},
+			"uuidEq": uuidEq,
 		}
 
 		ts, err := template.New(name).Funcs(funcMap).ParseFS(ui.Files, patterns...)
