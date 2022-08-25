@@ -1,9 +1,11 @@
 {
   "scripts": {
-    "build:css": "NODE_ENV=production postcss ./ui/static/css/tailwind.css -o ./ui/static/css/main.css",
-    "build:css:dev": "NODE_ENV=development postcss ./ui/static/css/tailwind.css -o ./ui/static/css/main.css"
+    "dev": "cd ui && swc src -d public --config-file ../.swcrc && cd ../ && NODE_ENV=development postcss ./ui/src/tailwind.css -o ./ui/public/css/main.css",
+    "build": "cd ui && swc src -d public --config-file ../.swcrc && cd ../ && NODE_ENV=production postcss ./ui/src/tailwind.css -o ./ui/public/css/main.css"
   },
   "devDependencies": {
+    "@swc/cli": "^0.1.57",
+    "@swc/core": "^1.2.241",
     "@tailwindcss/forms": "^0.5.2",
     "autoprefixer": "^10.4.8",
     "cssnano": "^5.1.12",

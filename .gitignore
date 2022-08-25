@@ -20,8 +20,9 @@
 .pnp.js
 .pnpm-debug.log
 
-# Built css file
-/ui/static/css/main.css
+# Built files
+/ui/public/js
+/ui/public/css
 
 # tmp files
 /tmp

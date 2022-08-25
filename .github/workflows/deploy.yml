@@ -22,14 +22,14 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install
-      - name: Build css file
-        run: pnpm build:css
+      - name: Build src files
+        run: pnpm build
       - uses: sylwit/install-b2-cli-action@v1.0.0
         env:
           B2_APPLICATION_KEY_ID: ${{ secrets.B2_APPLICATION_KEY_ID }}
           B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
-      - name: Sync static assets
-        run: b2 sync ./ui/static b2://clacksy
+      - name: Sync public assets
+        run: b2 sync ./ui/public b2://clacksy
   deploy:
     runs-on: ubuntu-latest
     steps:

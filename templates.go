@@ -15,7 +15,7 @@ import (
 type templateData struct {
 	Form            any
 	Flash           string
-	StaticPath      string
+	PublicPath      string
 	URLPath         string
 	AppEnv          string
 	IsAuthenticated bool
@@ -58,18 +58,18 @@ func newTemplateCache() (map[string]*template.Template, error) {
 }
 
 func (app *application) newTemplateData(r *http.Request) *templateData {
-	var staticPath string
+	var publicPath string
 	appEnv := os.Getenv("APP_ENV")
 
 	if appEnv == "production" {
-		staticPath = "https://cdn.clacksy.com/file/clacksy"
+		publicPath = "https://cdn.clacksy.com/file/clacksy"
 	} else {
-		staticPath = "/static"
+		publicPath = "/public"
 	}
 
 	return &templateData{
 		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
-		StaticPath:      staticPath,
+		PublicPath:      publicPath,
 		URLPath:         r.URL.Path,
 		AppEnv:          appEnv,
 		IsAuthenticated: app.isAuthenticated(r),

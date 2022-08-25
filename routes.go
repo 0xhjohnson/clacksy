@@ -40,7 +40,7 @@ func (app *application) routes() http.Handler {
 	})
 
 	fileServer := http.FileServer(http.FS(ui.Files))
-	r.Handle("/static/*", fileServer)
+	r.Handle("/public/*", fileServer)
 
 	return r
 }
