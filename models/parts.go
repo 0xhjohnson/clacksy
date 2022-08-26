@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"golang.org/x/sync/errgroup"
 )
 
 type Keyboard struct {
@@ -42,30 +43,44 @@ type AllParts struct {
 
 func (m *PartsModel) GetAll() (AllParts, error) {
 	var ap AllParts
+	g, _ := errgroup.WithContext(context.Background())
 
-	keyboards, err := m.GetKeyboards()
-	if err != nil {
-		return ap, err
-	}
-	ap.Keyboards = keyboards
+	g.Go(func() error {
+		keyboards, err := m.GetKeyboards()
+		if err == nil {
+			ap.Keyboards = keyboards
+		}
+		return err
+	})
 
-	switches, err := m.GetSwitches()
-	if err != nil {
-		return ap, err
-	}
-	ap.Switches = switches
+	g.Go(func() error {
+		switches, err := m.GetSwitches()
+		if err == nil {
+			ap.Switches = switches
+		}
+		return err
+	})
 
-	plateMaterials, err := m.GetPlateMaterials()
-	if err != nil {
-		return ap, err
-	}
-	ap.PlateMaterials = plateMaterials
+	g.Go(func() error {
+		plateMaterials, err := m.GetPlateMaterials()
+		if err == nil {
+			ap.PlateMaterials = plateMaterials
+		}
+		return err
+	})
 
-	keycapMaterials, err := m.GetKeycapMaterials()
+	g.Go(func() error {
+		keycapMaterials, err := m.GetKeycapMaterials()
+		if err == nil {
+			ap.KeycapMaterials = keycapMaterials
+		}
+		return err
+	})
+
+	err := g.Wait()
 	if err != nil {
-		return ap, err
+		return ap, nil
 	}
-	ap.KeycapMaterials = keycapMaterials
 
 	return ap, nil
 }
