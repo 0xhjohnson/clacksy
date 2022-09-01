@@ -1,5 +1,7 @@
 {{define "title"}}add soundtest{{end}}
 
+{{define "scripts"}}<script src="{{ .PublicPath }}/js/dropzone.js" defer></script>{{end}}
+
 {{define "main"}}
   <div class="py-4 sm:py-6">
     <div class="md:grid md:grid-cols-3 md:gap-6">
@@ -84,7 +86,7 @@
 
               <div>
                 <label class="block text-sm font-medium text-gray-700">Sound test</label>
-                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                <div id="file-dropzone" ondrop="dropHandler(event, 'soundtest', 'file-dropzone')" ondragover="dragOverHandler(event)" class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                   <div class="space-y-1 text-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -92,7 +94,7 @@
                     <div class="flex text-sm text-gray-600">
                       <label for="soundtest" class="relative cursor-pointer bg-white rounded-md text-sm font-medium text-pink-600 hover:text-pink-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-pink-500">
                         <span>Upload a file</span>
-                        <input id="soundtest" name="soundtest" type="file" class="sr-only" accept="audio/*" required />
+                        <input id="soundtest" name="soundtest" type="file" class="sr-only" accept="audio/*,video/*" required />
                       </label>
                       <p class="pl-1">or drag and drop</p>
                     </div>

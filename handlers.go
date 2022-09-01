@@ -204,7 +204,8 @@ func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filetype := http.DetectContentType(buff)
-	if !strings.Contains(filetype, "audio") {
+	isValidFileType := strings.Contains(filetype, "audio") || strings.Contains(filetype, "video")
+	if !isValidFileType {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}

@@ -1,5 +1,5 @@
 module.exports = {
-  content: ['./ui/html/**/*.tmpl'],
+  content: ['./ui/html/**/*.tmpl', './ui/src/js/**/*.js'],
   theme: {
     extend: {}
   },
