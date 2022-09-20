@@ -133,7 +133,7 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", userID.String())
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/vote", http.StatusSeeOther)
 }
 
 func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
@@ -269,4 +269,27 @@ func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
 	app.sessionManager.Put(r.Context(), "flash", "Your soundtest was added successfully")
 
 	http.Redirect(w, r, "/soundtest/new", http.StatusSeeOther)
+}
+
+type votePageData struct {
+	SoundTests []models.SoundTestVote
+}
+
+func (app *application) vote(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+
+	page := 0
+	userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
+
+	soundtests, err := app.soundtests.GetLatest(page, userID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	data.PageData = votePageData{
+		SoundTests: soundtests,
+	}
+
+	app.renderTemplate(w, http.StatusOK, "vote.tmpl", data)
 }

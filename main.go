@@ -29,6 +29,7 @@ type application struct {
 	users          *models.UserModel
 	soundtests     *models.SoundTestModel
 	parts          *models.PartsModel
+	votes          *models.VoteModel
 	s3Client       *s3.S3
 }
 
@@ -76,6 +77,7 @@ func main() {
 		users:          &models.UserModel{DB: dbpool},
 		soundtests:     &models.SoundTestModel{DB: dbpool},
 		parts:          &models.PartsModel{DB: dbpool},
+		votes:          &models.VoteModel{DB: dbpool},
 		s3Client:       s3Client,
 	}
 

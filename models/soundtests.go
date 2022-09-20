@@ -35,3 +35,60 @@ func (m *SoundTestModel) Insert(fileURL, keyboard, plateMaterial, keycapMaterial
 
 	return nil
 }
+
+type SoundTestVote struct {
+	ID          uuid.UUID
+	URL         string
+	Uploaded    time.Time
+	LastUpdated time.Time
+	CreatedBy   string
+	UserVote    int
+	TotalVotes  int
+	TotalTests  int
+}
+
+func (m *SoundTestModel) GetLatest(page int, userID string) ([]SoundTestVote, error) {
+	var soundtests []SoundTestVote
+
+	stmt := `SELECT
+		  st.sound_test_id,
+		  st.url,
+		  st.uploaded,
+		  st.last_updated,
+		  COALESCE(up.username, 'anonymous'),
+		  COALESCE(
+		    (SELECT vote_type
+		    FROM vote
+		    WHERE
+		      vote.sound_test_id = st.sound_test_id
+		      AND vote.created_by = $2
+		    ), 0) as user_vote,
+		  (SELECT COALESCE(SUM(vote_type), 0)
+		  FROM vote
+		  WHERE vote.sound_test_id = st.sound_test_id) as total_votes,
+		  count(*) over() as total_tests
+		FROM sound_test st
+		JOIN user_profile up ON up.user_profile_id = st.created_by
+		ORDER BY st.uploaded DESC
+		OFFSET $1 * 10
+		FETCH NEXT 10 ROWS ONLY`
+
+	rows, err := m.DB.Query(context.Background(), stmt, page, userID)
+	if err != nil {
+		return soundtests, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var st SoundTestVote
+
+		err := rows.Scan(&st.ID, &st.URL, &st.Uploaded, &st.LastUpdated, &st.CreatedBy, &st.UserVote, &st.TotalVotes, &st.TotalTests)
+		if err != nil {
+			return soundtests, err
+		}
+
+		soundtests = append(soundtests, st)
+	}
+
+	return soundtests, nil
+}

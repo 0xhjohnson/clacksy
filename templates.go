@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"text/template"
+	"time"
 
 	"github.com/0xhjohnson/clacksy/ui"
 	"github.com/gofrs/uuid"
@@ -19,10 +20,15 @@ type templateData struct {
 	URLPath         string
 	AppEnv          string
 	IsAuthenticated bool
+	PageData        any
 }
 
 func uuidEq(s string, u uuid.UUID) bool {
 	return s == u.String()
+}
+
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 1:04PM")
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -43,7 +49,8 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		}
 
 		funcMap := template.FuncMap{
-			"uuidEq": uuidEq,
+			"uuidEq":    uuidEq,
+			"humanDate": humanDate,
 		}
 
 		ts, err := template.New(name).Funcs(funcMap).ParseFS(ui.Files, patterns...)

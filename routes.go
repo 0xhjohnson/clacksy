@@ -39,6 +39,13 @@ func (app *application) routes() http.Handler {
 		r.Post("/new", app.addSoundtest)
 	})
 
+	r.Route("/vote", func(r chi.Router) {
+		r.Use(app.sessionManager.LoadAndSave, app.authenticate)
+		r.Use(app.requireAuth)
+
+		r.Get("/", app.vote)
+	})
+
 	fileServer := http.FileServer(http.FS(ui.Files))
 	r.Handle("/public/*", fileServer)
 
