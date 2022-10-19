@@ -44,6 +44,11 @@ func (app *application) routes() http.Handler {
 		r.Use(app.requireAuth)
 
 		r.Get("/", app.vote)
+
+		r.Route("/{soundtestID}", func(r chi.Router) {
+			r.Put("/upvote", app.upvote)
+			r.Put("/downvote", app.downvote)
+		})
 	})
 
 	fileServer := http.FileServer(http.FS(ui.Files))

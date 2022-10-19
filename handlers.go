@@ -12,6 +12,7 @@ import (
 	"github.com/0xhjohnson/clacksy/validator"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/go-chi/chi/v5"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -280,6 +281,70 @@ func (app *application) vote(w http.ResponseWriter, r *http.Request) {
 
 	page := 0
 	userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
+
+	soundtests, err := app.soundtests.GetLatest(page, userID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	data.PageData = votePageData{
+		SoundTests: soundtests,
+	}
+
+	app.renderTemplate(w, http.StatusOK, "vote.tmpl", data)
+}
+
+func (app *application) upvote(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+
+	page := 0
+	userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
+	soundtestID := chi.URLParam(r, "soundtestID")
+	prevVote := r.FormValue("previous-vote")
+
+	vote := 1
+	if prevVote == "1" {
+		vote = 0
+	}
+
+	err := app.votes.Upsert(soundtestID, vote, userID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	soundtests, err := app.soundtests.GetLatest(page, userID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	data.PageData = votePageData{
+		SoundTests: soundtests,
+	}
+
+	app.renderTemplate(w, http.StatusOK, "vote.tmpl", data)
+}
+
+func (app *application) downvote(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+
+	page := 0
+	userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
+	soundtestID := chi.URLParam(r, "soundtestID")
+	prevVote := r.FormValue("previous-vote")
+
+	vote := -1
+	if prevVote == "-1" {
+		vote = 0
+	}
+
+	err := app.votes.Upsert(soundtestID, vote, userID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
 
 	soundtests, err := app.soundtests.GetLatest(page, userID)
 	if err != nil {
