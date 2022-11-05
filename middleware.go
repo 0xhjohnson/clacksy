@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/gofrs/uuid"
 )
@@ -45,5 +46,25 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) paginate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		pageQ := r.URL.Query().Get("page")
+
+		page := 0
+
+		if pageQ != "" {
+			var err error
+			page, err = strconv.Atoi(pageQ)
+			if err != nil {
+				app.serverError(w, err)
+				return
+			}
+		}
+
+		ctx := context.WithValue(r.Context(), pageContextKey, page)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

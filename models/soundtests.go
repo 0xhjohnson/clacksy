@@ -47,7 +47,7 @@ type SoundTestVote struct {
 	TotalTests  int
 }
 
-func (m *SoundTestModel) GetLatest(page int, userID string) ([]SoundTestVote, error) {
+func (m *SoundTestModel) GetLatest(page int, perPage int, userID string) ([]SoundTestVote, error) {
 	var soundtests []SoundTestVote
 
 	stmt := `SELECT
@@ -61,7 +61,7 @@ func (m *SoundTestModel) GetLatest(page int, userID string) ([]SoundTestVote, er
 		    FROM vote
 		    WHERE
 		      vote.sound_test_id = st.sound_test_id
-		      AND vote.created_by = $2
+		      AND vote.created_by = $3
 		    ), 0) as user_vote,
 		  (SELECT COALESCE(SUM(vote_type), 0)
 		  FROM vote
@@ -71,9 +71,9 @@ func (m *SoundTestModel) GetLatest(page int, userID string) ([]SoundTestVote, er
 		JOIN user_profile up ON up.user_profile_id = st.created_by
 		ORDER BY st.uploaded DESC
 		OFFSET $1 * 10
-		FETCH NEXT 10 ROWS ONLY`
+		FETCH NEXT $2 ROWS ONLY`
 
-	rows, err := m.DB.Query(context.Background(), stmt, page, userID)
+	rows, err := m.DB.Query(context.Background(), stmt, page, perPage, userID)
 	if err != nil {
 		return soundtests, err
 	}

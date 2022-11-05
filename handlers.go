@@ -274,15 +274,20 @@ func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
 
 type votePageData struct {
 	SoundTests []models.SoundTestVote
+	HasMore    bool
+	Page       int
+	PrevPage   int
+	NextPage   int
 }
 
 func (app *application) vote(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 
-	page := 0
+	page := r.Context().Value(pageContextKey).(int)
+	perPage := 10
 	userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
 
-	soundtests, err := app.soundtests.GetLatest(page, userID)
+	soundtests, err := app.soundtests.GetLatest(page, perPage, userID)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -290,6 +295,10 @@ func (app *application) vote(w http.ResponseWriter, r *http.Request) {
 
 	data.PageData = votePageData{
 		SoundTests: soundtests,
+		HasMore:    len(soundtests) > 0 && soundtests[0].TotalTests > len(soundtests)*(page+1),
+		Page:       page,
+		PrevPage:   page - 1,
+		NextPage:   page + 1,
 	}
 
 	app.renderTemplate(w, http.StatusOK, "vote.tmpl", data)
@@ -298,7 +307,8 @@ func (app *application) vote(w http.ResponseWriter, r *http.Request) {
 func (app *application) upvote(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 
-	page := 0
+	page := r.Context().Value(pageContextKey).(int)
+	perPage := 10
 	userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
 	soundtestID := chi.URLParam(r, "soundtestID")
 	prevVote := r.FormValue("previous-vote")
@@ -314,7 +324,7 @@ func (app *application) upvote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	soundtests, err := app.soundtests.GetLatest(page, userID)
+	soundtests, err := app.soundtests.GetLatest(page, perPage, userID)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -322,6 +332,10 @@ func (app *application) upvote(w http.ResponseWriter, r *http.Request) {
 
 	data.PageData = votePageData{
 		SoundTests: soundtests,
+		HasMore:    true,
+		Page:       page,
+		PrevPage:   page - 1,
+		NextPage:   page + 1,
 	}
 
 	app.renderTemplate(w, http.StatusOK, "vote.tmpl", data)
@@ -330,7 +344,8 @@ func (app *application) upvote(w http.ResponseWriter, r *http.Request) {
 func (app *application) downvote(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 
-	page := 0
+	page := r.Context().Value(pageContextKey).(int)
+	perPage := 10
 	userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
 	soundtestID := chi.URLParam(r, "soundtestID")
 	prevVote := r.FormValue("previous-vote")
@@ -346,7 +361,7 @@ func (app *application) downvote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	soundtests, err := app.soundtests.GetLatest(page, userID)
+	soundtests, err := app.soundtests.GetLatest(page, perPage, userID)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -354,6 +369,10 @@ func (app *application) downvote(w http.ResponseWriter, r *http.Request) {
 
 	data.PageData = votePageData{
 		SoundTests: soundtests,
+		HasMore:    true,
+		Page:       page,
+		PrevPage:   page - 1,
+		NextPage:   page + 1,
 	}
 
 	app.renderTemplate(w, http.StatusOK, "vote.tmpl", data)

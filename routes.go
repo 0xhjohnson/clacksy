@@ -42,6 +42,7 @@ func (app *application) routes() http.Handler {
 	r.Route("/vote", func(r chi.Router) {
 		r.Use(app.sessionManager.LoadAndSave, app.authenticate)
 		r.Use(app.requireAuth)
+		r.Use(app.paginate)
 
 		r.Get("/", app.vote)
 
