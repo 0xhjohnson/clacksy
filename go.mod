@@ -1,6 +1,6 @@
 module github.com/0xhjohnson/clacksy
 
-go 1.18
+go 1.19
 
 require (
 	github.com/alexedwards/scs/pgxstore v0.0.0-20220528130143-d93ace5be94b
