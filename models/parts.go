@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"math/rand"
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -196,4 +197,170 @@ func (m *PartsModel) GetKeycapMaterials() ([]KeycapMaterial, error) {
 	}
 
 	return keycapMaterials, nil
+}
+
+func (m *PartsModel) GetKeyboardOpts(correctKeyboard uuid.UUID) ([]Keyboard, error) {
+	var keyboardOpts []Keyboard
+
+	stmt := `SELECT keyboard_id, name
+		FROM keyboard
+		WHERE
+			keyboard_id = $1 OR
+			keyboard_id IN (
+				SELECT keyboard_id
+				FROM keyboard
+				WHERE keyboard_id != $1
+				ORDER BY random()
+				LIMIT 3
+			)`
+
+	rows, err := m.DB.Query(context.Background(), stmt, correctKeyboard)
+	if err != nil {
+		return keyboardOpts, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var k Keyboard
+
+		err := rows.Scan(&k.ID, &k.Name)
+		if err != nil {
+			return keyboardOpts, err
+		}
+
+		keyboardOpts = append(keyboardOpts, k)
+	}
+
+	rand.Shuffle(len(keyboardOpts), func(i, j int) {
+		keyboardOpts[i], keyboardOpts[j] = keyboardOpts[j], keyboardOpts[i]
+	})
+
+	return keyboardOpts, nil
+}
+
+func (m *PartsModel) GetSwitchOpts(correctSwitch uuid.UUID) ([]Keyswitch, error) {
+	var switchOpts []Keyswitch
+
+	stmt := `SELECT
+			k.keyswitch_id,
+			k.name,
+			kt.keyswitch_type_id,
+			kt.name as keyswitch_type_name
+		FROM keyswitch k
+		JOIN keyswitch_type kt using (keyswitch_type_id)
+		WHERE
+			k.keyswitch_id = $1 OR
+			k.keyswitch_id IN (
+				SELECT keyswitch_id
+				FROM keyswitch
+				WHERE keyswitch_id != $1
+				ORDER BY random()
+				LIMIT 3
+			)`
+
+	rows, err := m.DB.Query(context.Background(), stmt, correctSwitch)
+	if err != nil {
+		return switchOpts, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var k Keyswitch
+
+		err := rows.Scan(&k.ID, &k.Name, &k.KeyswitchTypeID, &k.KeyswitchTypeName)
+		if err != nil {
+			return switchOpts, err
+		}
+
+		switchOpts = append(switchOpts, k)
+	}
+
+	rand.Shuffle(len(switchOpts), func(i, j int) {
+		switchOpts[i], switchOpts[j] = switchOpts[j], switchOpts[i]
+	})
+
+	return switchOpts, nil
+}
+
+func (m *PartsModel) GetPlateOpts(correctPlate uuid.UUID) ([]PlateMaterial, error) {
+	var plateOpts []PlateMaterial
+
+	stmt := `SELECT plate_material_id, name
+		FROM plate_material
+		WHERE
+			plate_material_id = $1 OR
+			plate_material_id IN (
+				SELECT plate_material_id
+				FROM plate_material
+				WHERE plate_material_id != $1
+				ORDER BY random()
+				LIMIT 3
+			)`
+
+	rows, err := m.DB.Query(context.Background(), stmt, correctPlate)
+	if err != nil {
+		return plateOpts, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var p PlateMaterial
+
+		err := rows.Scan(&p.ID, &p.Name)
+		if err != nil {
+			return plateOpts, err
+		}
+
+		plateOpts = append(plateOpts, p)
+	}
+
+	rand.Shuffle(len(plateOpts), func(i, j int) {
+		plateOpts[i], plateOpts[j] = plateOpts[j], plateOpts[i]
+	})
+
+	return plateOpts, nil
+}
+
+func (m *PartsModel) GetDaily(correctKeyboard, correctSwitch, correctPlate uuid.UUID) (AllParts, error) {
+	var parts AllParts
+	g, _ := errgroup.WithContext(context.Background())
+
+	g.Go(func() error {
+		keyboardOpts, err := m.GetKeyboardOpts(correctKeyboard)
+		if err == nil {
+			parts.Keyboards = keyboardOpts
+		}
+		return err
+	})
+
+	g.Go(func() error {
+		switchOpts, err := m.GetSwitchOpts(correctSwitch)
+		if err == nil {
+			parts.Switches = switchOpts
+		}
+		return err
+	})
+
+	g.Go(func() error {
+		plateOpts, err := m.GetPlateOpts(correctPlate)
+		if err == nil {
+			parts.PlateMaterials = plateOpts
+		}
+		return err
+	})
+
+	g.Go(func() error {
+		keycapMaterials, err := m.GetKeycapMaterials()
+		if err == nil {
+			parts.KeycapMaterials = keycapMaterials
+		}
+		return err
+	})
+
+	err := g.Wait()
+	if err != nil {
+		return parts, nil
+	}
+
+	return parts, nil
 }

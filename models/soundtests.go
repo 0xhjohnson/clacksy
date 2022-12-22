@@ -18,6 +18,7 @@ type SoundTest struct {
 	KeycapMaterialID uuid.UUID
 	KeyswitchID      uuid.UUID
 	CreatedBy        uuid.UUID
+	FeaturedOn       time.Time
 }
 
 type SoundTestModel struct {
@@ -91,4 +92,103 @@ func (m *SoundTestModel) GetLatest(page int, perPage int, userID string) ([]Soun
 	}
 
 	return soundtests, nil
+}
+
+func (m *SoundTestModel) GetDaily() (SoundTest, error) {
+	var st SoundTest
+
+	stmt := `SELECT
+		  sound_test_id,
+		  url,
+		  uploaded,
+		  last_updated,
+		  keyboard_id,
+		  plate_material_id,
+		  keycap_material_id,
+		  keyswitch_id,
+		  created_by,
+		  featured_on
+		FROM sound_test
+		WHERE featured_on IS NOT NULL
+		ORDER BY featured_on DESC
+		LIMIT 1`
+
+	err := m.DB.QueryRow(context.Background(), stmt).Scan(&st.ID, &st.URL, &st.Uploaded, &st.LastUpdated, &st.KeyboardID, &st.PlateMaterialID, &st.KeycapMaterialID, &st.KeyswitchID, &st.CreatedBy, &st.FeaturedOn)
+	if err != nil {
+		return st, err
+	}
+
+	return st, nil
+}
+
+func (m *SoundTestModel) AddPlay(soundtest uuid.UUID, userID, keyboard, plateMaterial, keycapMaterial, keyswitch string) error {
+	stmt := `INSERT INTO sound_test_play (sound_test_id, created_by, submitted, keyboard_id, plate_material_id, keycap_material_id, keyswitch_id)
+		VALUES($1, $2, now(), $3, $4, $5, $6)`
+
+	_, err := m.DB.Exec(context.Background(), stmt, soundtest, userID, keyboard, plateMaterial, keycapMaterial, keyswitch)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type SoundTestPlay struct {
+	SoundTestID           uuid.UUID
+	URL                   string
+	Submitted             time.Time
+	CreatedBy             string
+	Keyboard              string
+	CorrectKeyboard       string
+	PlateMaterial         string
+	CorrectPlateMaterial  string
+	KeycapMaterial        string
+	CorrectKeycapMaterial string
+	Keyswitch             string
+	CorrectKeyswitch      string
+}
+
+func (m *SoundTestModel) GetPlay(userID string) (SoundTestPlay, error) {
+	var p SoundTestPlay
+
+	stmt := `SELECT
+		stp.sound_test_id,
+		st.url,
+		stp.submitted,
+		COALESCE(up.username, 'anonymous') created_by,
+		k.name keyboard,
+		ck.name correct_keyboard,
+		pm.name plate_material,
+		cpm.name correct_plate_material,
+		km.name keycap_material,
+		ckm.name correct_keycap_material,
+		ks.name keyswitch,
+		cks.name correct_keyswitch
+	FROM sound_test_play stp
+	JOIN sound_test st USING (sound_test_id)
+	JOIN user_profile up ON st.created_by = up.user_profile_id
+	JOIN keyboard k ON stp.keyboard_id = k.keyboard_id
+	JOIN keyboard ck ON st.keyboard_id = ck.keyboard_id
+	JOIN plate_material pm ON stp.plate_material_id = pm.plate_material_id
+	JOIN plate_material cpm ON st.plate_material_id = cpm.plate_material_id
+	JOIN keycap_material km ON stp.keycap_material_id = km.keycap_material_id
+	JOIN keycap_material ckm ON st.keycap_material_id = ckm.keycap_material_id
+	JOIN keyswitch ks ON stp.keyswitch_id = ks.keyswitch_id
+	JOIN keyswitch cks ON st.keyswitch_id = cks.keyswitch_id
+	WHERE
+		stp.sound_test_id = (
+			SELECT sound_test_id
+			FROM sound_test
+			WHERE featured_on IS NOT NULL
+			ORDER BY featured_on DESC
+			LIMIT 1
+		)
+		AND stp.created_by = $1`
+
+	err := m.DB.QueryRow(context.Background(), stmt, userID).Scan(&p.SoundTestID, &p.URL, &p.Submitted, &p.CreatedBy, &p.Keyboard, &p.CorrectKeyboard, &p.PlateMaterial, &p.CorrectPlateMaterial, &p.KeycapMaterial, &p.CorrectKeycapMaterial, &p.Keyswitch, &p.CorrectKeyswitch)
+	if err != nil {
+		return p, err
+	}
+
+	return p, nil
 }

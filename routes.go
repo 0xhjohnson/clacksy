@@ -52,6 +52,15 @@ func (app *application) routes() http.Handler {
 		})
 	})
 
+	r.Route("/play", func(r chi.Router) {
+		r.Use(app.sessionManager.LoadAndSave, app.authenticate)
+		r.Use(app.requireAuth)
+
+		r.With(app.userDailyPlay, app.limitPlayOnce).Get("/", app.getDailySound)
+		r.Post("/", app.addPlayResult)
+		r.With(app.userDailyPlay, app.verifyPlayed).Get("/grade", app.getGrade)
+	})
+
 	fileServer := http.FileServer(http.FS(ui.Files))
 	r.Handle("/public/*", fileServer)
 

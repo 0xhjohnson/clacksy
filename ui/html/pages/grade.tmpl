@@ -1,0 +1,99 @@
+{{define "title"}}grade &mdash; sound of the day{{end}}
+
+{{define "main"}}
+	<div class="overflow-hidden bg-white shadow sm:rounded-lg">
+		<div class="px-4 pt-5 pb-3 sm:px-6">
+			<audio controls>
+				<source src="{{.StaticURL}}/{{.PageData.URL}}" />
+			</audio>
+		</div>
+		<div class="px-4 py-5 sm:px-6">
+			<h3 class="text-lg font-medium leading-6 text-gray-900">Soundtest results</h3>
+			<p class="mt-1 max-w-2xl text-sm text-gray-500">Let&apos;s see if you actually know as much about keyboards as you think.</p>
+		</div>
+		<div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+			<dl class="sm:divide-y sm:divide-gray-200">
+			  <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+				<dt class="text-sm font-medium text-gray-500">Keyboard</dt>
+				<dd class="mt-1 flex text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+					<span class="flex-grow">{{.PageData.Keyboard}}</span>
+					<span class="ml-4 flex-shrink-0">
+						{{if eq .PageData.Keyboard .PageData.CorrectKeyboard}}
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-emerald-500">
+							  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+							</svg>
+						{{else}}
+							<div class="flex space-x-2">
+								<span class="text-rose-900">{{.PageData.CorrectKeyboard}}</span>
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-rose-500 ml-2">
+								  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+								</svg>
+							</div>
+						{{end}}
+					</span>
+				</dd>
+			  </div>
+			  <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+				<dt class="text-sm font-medium text-gray-500">Switches</dt>
+				<dd class="mt-1 flex text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+					<span class="flex-grow">{{.PageData.Keyswitch}}</span>
+					<span class="ml-4 flex-shrink-0">
+						{{if eq .PageData.Keyswitch .PageData.CorrectKeyswitch}}
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-emerald-500">
+							  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+							</svg>
+						{{else}}
+							<div class="flex space-x-2">
+								<span class="text-rose-900">{{.PageData.CorrectKeyswitch}}</span>
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-rose-500 ml-2">
+								  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+								</svg>
+							</div>
+						{{end}}
+					</span>
+				</dd>
+			  </div>
+			  <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+				<dt class="text-sm font-medium text-gray-500">Plate material</dt>
+				<dd class="mt-1 flex text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+					<span class="flex-grow">{{.PageData.PlateMaterial}}</span>
+					<span class="ml-4 flex-shrink-0">
+						{{if eq .PageData.PlateMaterial .PageData.CorrectPlateMaterial}}
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-emerald-500">
+							  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+							</svg>
+						{{else}}
+							<div class="flex space-x-2">
+								<span class="text-rose-900">{{.PageData.CorrectPlateMaterial}}</span>
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-rose-500 ml-2">
+								  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+								</svg>
+							</div>
+						{{end}}
+					</span>
+				</dd>
+			  </div>
+			  <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+				<dt class="text-sm font-medium text-gray-500">Keycap material</dt>
+				<dd class="mt-1 flex text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+					<span class="flex-grow">{{.PageData.KeycapMaterial}}</span>
+					<span class="ml-4 flex-shrink-0">
+						{{if eq .PageData.KeycapMaterial .PageData.CorrectKeycapMaterial}}
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-emerald-500">
+							  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+							</svg>
+						{{else}}
+							<div class="flex space-x-2">
+								<span class="text-rose-900">{{.PageData.CorrectKeycapMaterial}}</span>
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-rose-500 ml-2">
+								  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+								</svg>
+							</div>
+						{{end}}
+					</span>
+				</dd>
+			  </div>
+			</dl>
+		</div>
+	</div>
+{{end}}

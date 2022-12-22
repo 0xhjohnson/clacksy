@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 
@@ -13,11 +14,14 @@ import (
 	"github.com/gofrs/uuid"
 )
 
+var staticURL string = "https://cdn.clacksy.com/file/clacksy"
+
 type templateData struct {
 	Form            any
 	Flash           string
 	PublicPath      string
 	URLPath         string
+	StaticURL       string
 	AppEnv          string
 	IsAuthenticated bool
 	PageData        any
@@ -51,6 +55,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		funcMap := template.FuncMap{
 			"uuidEq":    uuidEq,
 			"humanDate": humanDate,
+			"hasPrefix": strings.HasPrefix,
 		}
 
 		ts, err := template.New(name).Funcs(funcMap).ParseFS(ui.Files, patterns...)
@@ -69,7 +74,7 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 	appEnv := os.Getenv("APP_ENV")
 
 	if appEnv == "production" {
-		publicPath = "https://cdn.clacksy.com/file/clacksy"
+		publicPath = staticURL
 	} else {
 		publicPath = "/public"
 	}
@@ -77,6 +82,7 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
 		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
 		PublicPath:      publicPath,
+		StaticURL:       staticURL,
 		URLPath:         r.URL.Path,
 		AppEnv:          appEnv,
 		IsAuthenticated: app.isAuthenticated(r),

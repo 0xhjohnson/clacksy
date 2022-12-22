@@ -25,3 +25,8 @@ func (app *application) isAuthenticated(r *http.Request) bool {
 
 	return isAuthenticated
 }
+
+func (app *application) hasPlayed(r *http.Request) bool {
+	hasPlayed := r.Context().Value(userPlayContextKey)
+	return hasPlayed != nil
+}

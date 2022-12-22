@@ -377,3 +377,105 @@ func (app *application) downvote(w http.ResponseWriter, r *http.Request) {
 
 	app.renderTemplate(w, http.StatusOK, "vote.tmpl", data)
 }
+
+type dailySound struct {
+	SoundTest      models.SoundTest
+	Parts          models.AllParts
+	Keyboard       string
+	Keyswitch      string
+	PlateMaterial  string
+	KeycapMaterial string
+}
+
+func (app *application) getDailySound(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+
+	soundtest, err := app.soundtests.GetDaily()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	partOpts, err := app.parts.GetDaily(soundtest.KeyboardID, soundtest.KeyswitchID, soundtest.PlateMaterialID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	data.PageData = dailySound{
+		SoundTest: soundtest,
+		Parts:     partOpts,
+	}
+
+	app.renderTemplate(w, http.StatusOK, "play.tmpl", data)
+}
+
+type dailyPlayForm struct {
+	Keyboard       string
+	Keyswitch      string
+	PlateMaterial  string
+	KeycapMaterial string
+	validator.Validator
+}
+
+func (app *application) addPlayResult(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+
+	soundtest, err := app.soundtests.GetDaily()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	partOpts, err := app.parts.GetDaily(soundtest.KeyboardID, soundtest.KeyswitchID, soundtest.PlateMaterialID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	data.PageData = dailySound{
+		SoundTest: soundtest,
+		Parts:     partOpts,
+	}
+
+	err = r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form := dailyPlayForm{
+		Keyboard:       r.PostForm.Get("keyboard"),
+		Keyswitch:      r.PostForm.Get("keyswitch"),
+		PlateMaterial:  r.PostForm.Get("plate-material"),
+		KeycapMaterial: r.PostForm.Get("keycap-material"),
+	}
+
+	form.CheckField(validator.NotBlank(form.Keyboard), "keyboard", "This field cannnot be blank")
+	form.CheckField(validator.NotBlank(form.Keyswitch), "keyswitch", "This field cannnot be blank")
+	form.CheckField(validator.NotBlank(form.PlateMaterial), "plate-material", "This field cannnot be blank")
+	form.CheckField(validator.NotBlank(form.KeycapMaterial), "keycap-material", "This field cannnot be blank")
+
+	data.Form = form
+
+	if !form.Valid() {
+		app.renderTemplate(w, http.StatusUnprocessableEntity, "soundtest.tmpl", data)
+		return
+	}
+
+	userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
+
+	err = app.soundtests.AddPlay(soundtest.ID, userID, form.Keyboard, form.PlateMaterial, form.KeycapMaterial, form.Keyswitch)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.renderTemplate(w, http.StatusOK, "grade.tmpl", data)
+}
+
+func (app *application) getGrade(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	playResult := r.Context().Value(userPlayContextKey).(models.SoundTestPlay)
+	data.PageData = playResult
+
+	app.renderTemplate(w, http.StatusOK, "grade.tmpl", data)
+}

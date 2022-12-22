@@ -1,0 +1,94 @@
+{{define "title"}}play &mdash; sound of the day{{end}}
+
+{{define "main"}}
+  <div class="py-4 sm:py-6">
+    <div class="md:grid md:grid-cols-3 md:gap-6">
+      <div class="md:col-span-1">
+        <div class="px-4 sm:px-0">
+          <h3 class="text-lg font-medium leading-6 text-gray-900">Soundtest</h3>
+          <p class="mt-1 text-sm text-gray-600">This soundtest was most upvoted by some nerds, if you think it sucks <a class="text-pink-700" href="/vote">vote</a> for the next one.</p>
+        </div>
+      </div>
+      <div class="mt-5 md:mt-0 md:col-span-2">
+        <form action="/play" method="POST">
+          <div class="shadow sm:rounded-md sm:overflow-hidden">
+            <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
+              <div class="grid grid-cols-4 gap-6">
+                <div class="col-span-4 sm:col-span-3">
+					<audio controls>
+						<source src="{{.StaticURL}}/{{.PageData.SoundTest.URL}}" />
+					</audio>
+                </div>
+                <div class="col-span-4 sm:col-span-3">
+                  <label for="keyboard" class="block text-sm font-medium text-gray-700">Keyboard</label>
+                  <select
+                    id="keyboard"
+                    name="keyboard"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                    required
+                  >
+                    <option value=""></option>
+                    {{range .PageData.Parts.Keyboards}}
+                      <option value="{{.ID}}" {{if uuidEq $.PageData.Keyboard .ID}} selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-cols-4 gap-6">
+                <div class="col-span-4 sm:col-span-3">
+                  <label for="keyswitch" class="block text-sm font-medium text-gray-700">Switches</label>
+                  <select
+                    id="keyswitch"
+                    name="keyswitch"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                    required
+                  >
+                    <option value=""></option>
+                    {{range .PageData.Parts.Switches}}
+                      <option value="{{.ID}}" {{if uuidEq $.PageData.Keyswitch .ID}} selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-cols-4 gap-6">
+                <div class="col-span-4 sm:col-span-2">
+                  <label for="plate-material" class="block text-sm font-medium text-gray-700">Plate material</label>
+                  <select
+                    id="plate-material"
+                    name="plate-material"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                    required
+                  >
+                    <option value=""></option>
+                    {{range .PageData.Parts.PlateMaterials}}
+                      <option value="{{.ID}}" {{if uuidEq $.PageData.PlateMaterial .ID}} selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-cols-4 gap-6">
+                <div class="col-span-4 sm:col-span-2">
+                  <label for="keycap-material" class="block text-sm font-medium text-gray-700">Keycap material</label>
+                  <select
+                    id="keycap-material"
+                    name="keycap-material"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                    required
+                  >
+                    <option value=""></option>
+                    {{range .PageData.Parts.KeycapMaterials}}
+                      <option value="{{.ID}}"} {{if uuidEq $.PageData.KeycapMaterial .ID}} selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+              <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">Save</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{{end}}
