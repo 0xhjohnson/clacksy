@@ -42,7 +42,7 @@ func NotBlank(value string) bool {
 }
 
 func MinChars(value string, n int) bool {
-	return utf8.RuneCountInString(value) >= n
+	return value == "" || utf8.RuneCountInString(value) >= n
 }
 
 func Matches(value string, rx *regexp.Regexp) bool {

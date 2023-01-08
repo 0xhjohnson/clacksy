@@ -23,6 +23,9 @@ func (app *application) routes() http.Handler {
 	r.Route("/user", func(r chi.Router) {
 		r.Use(app.sessionManager.LoadAndSave, app.authenticate)
 
+		r.With(app.requireAuth).Get("/", app.getUserProfile)
+		r.With(app.requireAuth).Post("/", app.updateUserProfile)
+
 		r.Get("/new", app.newUserForm)
 		r.Post("/new", app.addNewUser)
 		r.Get("/login", app.loginUserForm)

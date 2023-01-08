@@ -479,3 +479,87 @@ func (app *application) getGrade(w http.ResponseWriter, r *http.Request) {
 
 	app.renderTemplate(w, http.StatusOK, "grade.tmpl", data)
 }
+
+type profileForm struct {
+	Name     string
+	Username string
+	Email    string
+	validator.Validator
+}
+
+func (app *application) getUserProfile(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
+
+	profile, err := app.users.GetProfileInfo(userID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	data.Form = profileForm{
+		Name:     profile.Name,
+		Username: profile.Username,
+		Email:    profile.Email,
+	}
+
+	app.renderTemplate(w, http.StatusOK, "profile.tmpl", data)
+}
+
+func (app *application) updateUserProfile(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form := profileForm{
+		Name:     r.PostForm.Get("name"),
+		Username: r.PostForm.Get("username"),
+		Email:    r.PostForm.Get("email"),
+	}
+
+	form.CheckField(validator.MinChars(form.Username, 3), "username", "This field must be at least 3 characters.")
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannnot be blank")
+	form.CheckField(validator.Matches(form.Email, validator.EmailRegex), "email", "This field must be a valid email address")
+
+	data.Form = form
+
+	if !form.Valid() {
+		app.renderTemplate(w, http.StatusUnprocessableEntity, "profile.tmpl", data)
+		return
+	}
+
+	userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
+
+	err = app.users.UpdateProfile(userID, form.Email, form.Name, form.Username)
+	if err != nil {
+		if errors.Is(err, models.ErrDuplicateUsername) {
+			form.AddFieldError("username", "Username is already in use")
+
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.renderTemplate(w, http.StatusUnprocessableEntity, "profile.tmpl", data)
+		} else {
+			app.serverError(w, err)
+		}
+
+		return
+	}
+
+	profile, err := app.users.GetProfileInfo(userID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	data.Form = profileForm{
+		Name:     profile.Name,
+		Username: profile.Username,
+		Email:    profile.Email,
+	}
+
+	app.renderTemplate(w, http.StatusOK, "profile.tmpl", data)
+}

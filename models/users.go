@@ -14,14 +14,13 @@ import (
 )
 
 type User struct {
-	ID              uuid.UUID
-	Email           string
-	HashedPassword  []byte
-	Created         time.Time
-	LastUpdated     time.Time
-	Name            string
-	Username        string
-	GenderPronounID uuid.UUID
+	ID             uuid.UUID
+	Email          string
+	HashedPassword []byte
+	Created        time.Time
+	LastUpdated    time.Time
+	Name           string
+	Username       string
 }
 
 type UserModel struct {
@@ -87,4 +86,52 @@ func (m *UserModel) Exists(id uuid.UUID) (bool, error) {
 	err := m.DB.QueryRow(context.Background(), stmt, id).Scan(&exists)
 
 	return exists, err
+}
+
+type ProfileInfo struct {
+	ID          uuid.UUID
+	Email       string
+	LastUpdated time.Time
+	Name        string
+	Username    string
+}
+
+func (m *UserModel) GetProfileInfo(userID string) (ProfileInfo, error) {
+	var p ProfileInfo
+
+	stmt := `SELECT
+				user_profile_id,
+				email,
+				last_updated,
+				COALESCE(name, ''),
+				COALESCE(username, '')
+			FROM user_profile
+			WHERE user_profile_id = $1`
+
+	err := m.DB.QueryRow(context.Background(), stmt, userID).Scan(&p.ID, &p.Email, &p.LastUpdated, &p.Name, &p.Username)
+	if err != nil {
+		return p, err
+	}
+
+	return p, nil
+}
+
+func (m *UserModel) UpdateProfile(userID, email, name, username string) error {
+	stmt := `UPDATE user_profile
+		SET email = $2, name = $3, username = NULLIF($4, ''), last_updated = now()
+		WHERE user_profile_id = $1`
+
+	_, err := m.DB.Exec(context.Background(), stmt, userID, email, name, username)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case pgerrcode.UniqueViolation:
+				return ErrDuplicateUsername
+			}
+		}
+		return err
+	}
+
+	return nil
 }
