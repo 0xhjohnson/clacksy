@@ -13,6 +13,6 @@ FROM alpine
 
 COPY --from=builder /usr/local/bin/clacksy /usr/local/bin/clacksy
 
-RUN apk add bash curl
+RUN apk add bash curl ffmpeg
 
 ENTRYPOINT [ "clacksy" ]

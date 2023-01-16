@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -13,6 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-chi/chi/v5"
+)
+
+const (
+	MB = 1 << 20
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -180,8 +186,8 @@ func (app *application) addSoundtestForm(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, 24<<20)
-	err := r.ParseMultipartForm(24 << 20)
+	r.Body = http.MaxBytesReader(w, r.Body, 24*MB)
+	err := r.ParseMultipartForm(24 * MB)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
@@ -189,7 +195,7 @@ func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
 
 	defer r.MultipartForm.RemoveAll()
 
-	file, fileHeader, err := r.FormFile("soundtest")
+	file, mpFileHeader, err := r.FormFile("soundtest")
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
@@ -197,17 +203,10 @@ func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	buff := make([]byte, 512)
-	_, err = file.Read(buff)
+	buffer := bytes.NewBuffer(make([]byte, 0, mpFileHeader.Size))
+	_, err = io.Copy(buffer, file)
 	if err != nil {
 		app.serverError(w, err)
-		return
-	}
-
-	filetype := http.DetectContentType(buff)
-	isValidFileType := strings.Contains(filetype, "audio") || strings.Contains(filetype, "video")
-	if !isValidFileType {
-		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
@@ -215,6 +214,49 @@ func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.serverError(w, err)
 		return
+	}
+
+	fileHeader := make([]byte, 512)
+	_, err = file.Read(fileHeader)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	filetype := http.DetectContentType(fileHeader)
+	isValidFileType := strings.Contains(filetype, "audio") || strings.Contains(filetype, "video")
+	if !isValidFileType {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	var filename = mpFileHeader.Filename
+
+	if strings.Contains(filetype, "video") {
+		tmpFile, err := os.CreateTemp("", "soundtest-*"+filepath.Ext(filename))
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		defer os.Remove(tmpFile.Name())
+		defer tmpFile.Close()
+
+		_, err = tmpFile.Write(buffer.Bytes())
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+
+		args := []string{"-i", tmpFile.Name(), "-t", "40", "-vn", "-acodec", "copy", "-f", "adts", "pipe:1"}
+		out, err := exec.Command("ffmpeg", args...).Output()
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+
+		filename = filenameWithoutExt(mpFileHeader.Filename) + ".aac"
+		buffer.Reset()
+		buffer.Write(out)
 	}
 
 	keebParts, err := app.parts.GetAll()
@@ -249,10 +291,12 @@ func (app *application) addSoundtest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
-	objKey := filepath.Join("soundtests", userID, fileHeader.Filename)
+	objKey := filepath.Join("soundtests", userID, filename)
+
+	reader := bytes.NewReader(buffer.Bytes())
 
 	_, err = app.s3Client.PutObject(&s3.PutObjectInput{
-		Body:   file,
+		Body:   reader,
 		Bucket: aws.String(os.Getenv("B2_BUCKET")),
 		Key:    aws.String(objKey),
 	})

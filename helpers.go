@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"runtime/debug"
 )
 
@@ -29,4 +30,8 @@ func (app *application) isAuthenticated(r *http.Request) bool {
 func (app *application) hasPlayed(r *http.Request) bool {
 	hasPlayed := r.Context().Value(userPlayContextKey)
 	return hasPlayed != nil
+}
+
+func filenameWithoutExt(fileName string) string {
+	return fileName[:len(fileName)-len(filepath.Ext(fileName))]
 }
