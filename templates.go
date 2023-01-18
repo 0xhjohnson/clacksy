@@ -32,7 +32,7 @@ func uuidEq(s string, u uuid.UUID) bool {
 }
 
 func humanDate(t time.Time) string {
-	return t.Format("02 Jan 2006 at 1:04PM")
+	return t.Format("02 Jan 2006 at 3:04PM")
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
