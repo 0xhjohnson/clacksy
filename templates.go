@@ -10,7 +10,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/0xhjohnson/clacksy/ui"
 	"github.com/gofrs/uuid"
 )
 
@@ -35,10 +34,10 @@ func humanDate(t time.Time) string {
 	return t.Format("02 Jan 2006 at 3:04PM")
 }
 
-func newTemplateCache() (map[string]*template.Template, error) {
+func newTemplateCache(files fs.FS) (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
 
-	pages, err := fs.Glob(ui.Files, "html/pages/*.tmpl")
+	pages, err := fs.Glob(files, "html/pages/*.tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -58,9 +57,9 @@ func newTemplateCache() (map[string]*template.Template, error) {
 			"hasPrefix": strings.HasPrefix,
 		}
 
-		ts, err := template.New(name).Funcs(funcMap).ParseFS(ui.Files, patterns...)
+		ts, err := template.New(name).Funcs(funcMap).ParseFS(files, patterns...)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("newTemplateCache: failed to parse template: %w", err)
 		}
 
 		cache[name] = ts

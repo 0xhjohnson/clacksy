@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/0xhjohnson/clacksy/models"
+	"github.com/0xhjohnson/clacksy/ui"
 	"github.com/alexedwards/scs/pgxstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/aws/aws-sdk-go/aws"
@@ -51,7 +52,7 @@ func main() {
 
 	defer dbpool.Close()
 
-	templateCache, err := newTemplateCache()
+	templateCache, err := newTemplateCache(ui.Files)
 	if err != nil {
 		errorLog.Fatal(err)
 	}

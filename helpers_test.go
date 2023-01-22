@@ -89,6 +89,46 @@ func TestHasPlayed(t *testing.T) {
 	}
 }
 
+func TestIsAuthenticated(t *testing.T) {
+	app := &application{}
+
+	tests := map[string]struct {
+		r       *http.Request
+		context context.Context
+		want    bool
+	}{
+		"is authenticated": {
+			r:       &http.Request{},
+			context: context.WithValue(context.Background(), isAuthenticatedContextKey, true),
+			want:    true,
+		},
+		"context key is nil": {
+			r:       &http.Request{},
+			context: context.WithValue(context.Background(), isAuthenticatedContextKey, nil),
+			want:    false,
+		},
+		"context key is false": {
+			r:       &http.Request{},
+			context: context.WithValue(context.Background(), isAuthenticatedContextKey, false),
+			want:    false,
+		},
+		"fresh context": {
+			r:       &http.Request{},
+			context: context.Background(),
+			want:    false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := app.isAuthenticated(tc.r.WithContext(tc.context))
+			if tc.want != got {
+				t.Errorf("want: %t, got: %t", tc.want, got)
+			}
+		})
+	}
+}
+
 func TestClientError(t *testing.T) {
 	app := &application{}
 
