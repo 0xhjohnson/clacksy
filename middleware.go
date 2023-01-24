@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -23,19 +22,13 @@ func (app *application) requireAuth(next http.Handler) http.Handler {
 
 func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
+		id := app.sessionManager.GetString(r.Context(), string(authenticatedUserKey))
 		if id == "" {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		uID, err := uuid.FromString(id)
-		if err != nil {
-			app.serverError(w, err)
-			return
-		}
-
-		exists, err := app.users.Exists(uID)
+		exists, err := app.users.Exists(id)
 		if err != nil {
 			app.serverError(w, err)
 			return
@@ -72,7 +65,7 @@ func (app *application) paginate(next http.Handler) http.Handler {
 
 func (app *application) userDailyPlay(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
+		userID := app.sessionManager.GetString(r.Context(), string(authenticatedUserKey))
 
 		userPlay, err := app.soundtests.GetPlay(userID)
 		if err != nil {
