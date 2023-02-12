@@ -7,9 +7,9 @@ processes = []
 
 [env]
   APP_ENV = "production"
-  PORT = "8080"
 
 [experimental]
+  enable_consul = true
   allowed_public_ports = []
   auto_rollback = true
   cmd = []
@@ -41,3 +41,7 @@ processes = []
     interval = "15s"
     restart_limit = 0
     timeout = "2s"
+
+[mounts]
+  source = "litefs"
+  destination = "/var/lib/litefs"

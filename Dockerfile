@@ -11,8 +11,11 @@ RUN go build -ldflags "-s -w -extldflags '-static'" -tags osusergo,netgo -o /usr
 
 FROM alpine
 
+COPY --from=flyio/litefs:0.3 /usr/local/bin/litefs /usr/local/bin/litefs
 COPY --from=builder /usr/local/bin/clacksy /usr/local/bin/clacksy
 
-RUN apk add bash curl ffmpeg
+ADD etc/litefs.yml /etc/litefs.yml
 
-ENTRYPOINT [ "clacksy" ]
+RUN apk add bash fuse sqlite ca-certificates curl ffmpeg
+
+ENTRYPOINT litefs mount -- clacksy -dsn /litefs/clacksy

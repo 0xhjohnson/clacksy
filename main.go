@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -9,6 +11,7 @@ import (
 	"time"
 
 	"github.com/0xhjohnson/clacksy/models"
+	"github.com/0xhjohnson/clacksy/sqlite"
 	"github.com/0xhjohnson/clacksy/ui"
 	"github.com/alexedwards/scs/pgxstore"
 	"github.com/alexedwards/scs/v2"
@@ -22,28 +25,24 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-type application struct {
-	errorLog       *log.Logger
-	infoLog        *log.Logger
-	sessionManager *scs.SessionManager
-	templateCache  map[string]*template.Template
-	users          *models.UserModel
-	soundtests     *models.SoundTestModel
-	parts          *models.PartsModel
-	votes          *models.VoteModel
-	s3Client       *s3.S3
-}
+var (
+	dsn  = flag.String("dsn", ":memory:", "datasource name")
+	addr = flag.String("addr", ":8080", "bind address")
+)
 
 func main() {
+	flag.Parse()
+
 	databaseURL := os.Getenv("DATABASE_URL")
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "4000"
-	}
-	addr := ":" + port
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	if *dsn == "" {
+		errorLog.Fatal(fmt.Errorf("dsn required"))
+	} else if *addr == "" {
+		errorLog.Fatal(fmt.Errorf("bind address required"))
+	}
 
 	dbpool, err := openDbPool(databaseURL)
 	if err != nil {
@@ -51,6 +50,13 @@ func main() {
 	}
 
 	defer dbpool.Close()
+
+	db := sqlite.NewDB(":memory:")
+	err = db.Open()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+	defer db.Close()
 
 	templateCache, err := newTemplateCache(ui.Files)
 	if err != nil {
@@ -83,7 +89,7 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:         addr,
+		Addr:         *addr,
 		ErrorLog:     errorLog,
 		Handler:      app.routes(),
 		IdleTimeout:  2 * time.Minute,
@@ -91,7 +97,7 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	infoLog.Printf("Starting server on %s", addr)
+	infoLog.Printf("Starting server on %s", *addr)
 	err = srv.ListenAndServe()
 	errorLog.Fatal(err)
 }
@@ -122,4 +128,16 @@ func openDbPool(dsn string) (*pgxpool.Pool, error) {
 	}
 
 	return pool, nil
+}
+
+type application struct {
+	errorLog       *log.Logger
+	infoLog        *log.Logger
+	sessionManager *scs.SessionManager
+	templateCache  map[string]*template.Template
+	users          *models.UserModel
+	soundtests     *models.SoundTestModel
+	parts          *models.PartsModel
+	votes          *models.VoteModel
+	s3Client       *s3.S3
 }
