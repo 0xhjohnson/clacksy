@@ -7,7 +7,7 @@ COPY ./go.sum .
 RUN go mod download
 
 COPY . .
-RUN go build -ldflags "-s -w -extldflags '-static'" -tags osusergo,netgo -o /usr/local/bin/clacksy ./
+RUN go build -ldflags "-s -w -extldflags '-static'" -tags osusergo,netgo -o /usr/local/bin/clacksy ./cmd/clacksy
 
 FROM alpine
 
