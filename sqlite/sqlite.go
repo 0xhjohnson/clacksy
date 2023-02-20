@@ -76,6 +76,22 @@ func (db *DB) Close() error {
 	return nil
 }
 
+// BeginTx starts a transaction and returns a wrapper Tx type. This type
+// provides a reference to the database and a fixed timestamp at the start of
+// the transaction. The timestamp allows us to mock time during tests as well.
+func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
+	tx, err := db.db.BeginTx(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Tx{
+		Tx:  tx,
+		db:  db,
+		now: db.Now().UTC().Truncate(time.Second),
+	}, nil
+}
+
 // migrate sets up migration tracking and executes pending migration files.
 //
 // Once a migration is run, its name is stored in the 'migrations' table so it
@@ -128,4 +144,10 @@ func (db *DB) migrateFile(name string) error {
 	}
 
 	return tx.Commit()
+}
+
+type Tx struct {
+	*sql.Tx
+	db  *DB
+	now time.Time
 }
