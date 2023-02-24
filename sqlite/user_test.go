@@ -6,6 +6,7 @@ import (
 
 	"github.com/0xhjohnson/clacksy"
 	"github.com/0xhjohnson/clacksy/sqlite"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestUserService_CreateUser(t *testing.T) {
@@ -26,7 +27,7 @@ func TestUserService_CreateUser(t *testing.T) {
 		} else if u.CreatedAt.IsZero() {
 			t.Fatal("expected created at")
 		} else if u.UpdatedAt.IsZero() {
-			t.Fatal("expected created at")
+			t.Fatal("expected updated at")
 		}
 
 		u2 := &clacksy.User{
@@ -37,6 +38,12 @@ func TestUserService_CreateUser(t *testing.T) {
 			t.Fatal(err)
 		} else if got, want := u2.UserID, 2; got != want {
 			t.Fatalf("UserID=%v, want %v", got, want)
+		}
+
+		if other, err := s.FindUserByID(context.Background(), 1); err != nil {
+			t.Fatal(err)
+		} else if !cmp.Equal(u, other) {
+			t.Fatalf("mismatch: %#v != %#v", u, other)
 		}
 	})
 
@@ -86,4 +93,87 @@ func TestUserService_CreateUser(t *testing.T) {
 			t.Fatalf("unexpected error: %#v", err)
 		}
 	})
+}
+
+func TestUserService_Authenticate(t *testing.T) {
+	t.Run("OK", func(t *testing.T) {
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+		s := sqlite.NewUserService(db)
+
+		name := "hunter"
+		email := "hunter@gmail.com"
+		password := "agoodpassword"
+		u, ctx := MustCreateUser(t, context.Background(), db, &clacksy.User{
+			Email: email,
+			Name:  name,
+		}, password)
+
+		if user, err := s.Authenticate(ctx, u, password); err != nil {
+			t.Fatal(err)
+		} else if got, want := user.Email, email; got != want {
+			t.Fatalf("Email=%v, want %v", got, want)
+		} else if got, want := user.Name, name; got != want {
+			t.Fatalf("Name=%v, want %v", got, want)
+		}
+	})
+
+	t.Run("ErrNotFound", func(t *testing.T) {
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+		s := sqlite.NewUserService(db)
+
+		email := "hunter@gmail.com"
+		password := "agoodpassword"
+		_, ctx := MustCreateUser(t, context.Background(), db, &clacksy.User{
+			Email: email,
+		}, password)
+
+		if _, err := s.Authenticate(ctx, &clacksy.User{Email: "invalid@gmail.com"}, password); err == nil {
+			t.Fatal("expected error")
+		} else if clacksy.ErrorCode(err) != clacksy.ENOTFOUND || clacksy.ErrorMessage(err) != "User not found." {
+			t.Fatalf("unexpected error: %#v", err)
+		}
+
+	})
+
+	t.Run("ErrInvalidCreds", func(t *testing.T) {
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+		s := sqlite.NewUserService(db)
+
+		name := "hunter"
+		email := "hunter@gmail.com"
+		password := "agoodpassword"
+		u, ctx := MustCreateUser(t, context.Background(), db, &clacksy.User{
+			Email: email,
+			Name:  name,
+		}, password)
+
+		if _, err := s.Authenticate(ctx, u, "incorrectpass"); err == nil {
+			t.Fatal("expected error")
+		} else if clacksy.ErrorCode(err) != clacksy.EINVALID || clacksy.ErrorMessage(err) != "User credentials invalid." {
+			t.Fatalf("unexpected error: %#v", err)
+		}
+	})
+}
+
+func TestUserService_FindUser(t *testing.T) {
+	t.Run("ErrNotFound", func(t *testing.T) {
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+		s := sqlite.NewUserService(db)
+
+		if _, err := s.FindUserByID(context.Background(), 1); clacksy.ErrorCode(err) != clacksy.ENOTFOUND {
+			t.Fatalf("unexpected error: %#v", err)
+		}
+	})
+}
+
+func MustCreateUser(tb testing.TB, ctx context.Context, db *sqlite.DB, user *clacksy.User, password string) (*clacksy.User, context.Context) {
+	tb.Helper()
+	if err := sqlite.NewUserService(db).CreateUser(ctx, user, password); err != nil {
+		tb.Fatal(err)
+	}
+	return user, clacksy.NewContextWithUser(ctx, user)
 }

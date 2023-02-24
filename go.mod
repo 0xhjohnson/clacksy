@@ -16,6 +16,8 @@ require (
 
 require github.com/mattn/go-sqlite3 v1.14.16
 
+require github.com/google/go-cmp v0.5.9
+
 require (
 	github.com/aws/aws-sdk-go v1.44.78
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect

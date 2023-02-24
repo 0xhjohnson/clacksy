@@ -30,4 +30,6 @@ func (u *User) Validate() error {
 // UserService represents a service for managing users.
 type UserService interface {
 	CreateUser(ctx context.Context, user *User, password string) error
+	Authenticate(ctx context.Context, user *User, password string) (*User, error)
+	FindUserByID(ctx context.Context, id int) (*User, error)
 }
