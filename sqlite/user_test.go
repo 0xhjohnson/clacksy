@@ -95,6 +95,54 @@ func TestUserService_CreateUser(t *testing.T) {
 	})
 }
 
+func TestUserService_UpdateUser(t *testing.T) {
+	t.Run("OK", func(t *testing.T) {
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+		s := sqlite.NewUserService(db)
+
+		user0, ctx0 := MustCreateUser(t, context.Background(), db, &clacksy.User{
+			Email: "hi@0xhjohnson.com",
+			Name:  "hunter",
+		}, "agoodpassword")
+
+		newName, newEmail := "hunt", "hunt@gmail.com"
+		uu, err := s.UpdateUser(ctx0, user0.UserID, clacksy.UserUpdate{
+			Email: &newEmail,
+			Name:  &newName,
+		})
+		if err != nil {
+			t.Fatal(err)
+		} else if got, want := uu.Name, "hunt"; got != want {
+			t.Fatalf("Name=%v, want %v", got, want)
+		} else if got, want := uu.Email, "hunt@gmail.com"; got != want {
+			t.Fatalf("Email=%v, want %v", got, want)
+		}
+
+		if other, err := s.FindUserByID(context.Background(), 1); err != nil {
+			t.Fatal(err)
+		} else if !cmp.Equal(uu, other) {
+			t.Fatalf("mismatch: %#v != %#v", uu, other)
+		}
+	})
+
+	t.Run("ErrUnauthorized", func(t *testing.T) {
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+		s := sqlite.NewUserService(db)
+
+		user0, _ := MustCreateUser(t, context.Background(), db, &clacksy.User{Email: "bob@gmail.com"}, "bobpassword")
+		_, ctx1 := MustCreateUser(t, context.Background(), db, &clacksy.User{Email: "rob@gmail.com"}, "robpassword")
+
+		newName := "newname"
+		if _, err := s.UpdateUser(ctx1, user0.UserID, clacksy.UserUpdate{Name: &newName}); err == nil {
+			t.Fatal("expected error")
+		} else if clacksy.ErrorCode(err) != clacksy.EUNAUTHORIZED || clacksy.ErrorMessage(err) != `You are not allowed to update this user.` {
+			t.Fatalf("unexpected error: %#v", err)
+		}
+	})
+}
+
 func TestUserService_Authenticate(t *testing.T) {
 	t.Run("OK", func(t *testing.T) {
 		db := MustOpenDB(t)

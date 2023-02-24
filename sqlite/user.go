@@ -21,6 +21,23 @@ func NewUserService(db *DB) *UserService {
 	return &UserService{db: db}
 }
 
+func (s *UserService) UpdateUser(ctx context.Context, id int, upd clacksy.UserUpdate) (*clacksy.User, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	user, err := updateUser(ctx, tx, id, upd)
+	if err != nil {
+		return user, err
+	} else if err := tx.Commit(); err != nil {
+		return user, err
+	}
+
+	return user, nil
+}
+
 func (s *UserService) FindUserByID(ctx context.Context, id int) (*clacksy.User, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -57,6 +74,46 @@ func (s *UserService) CreateUser(ctx context.Context, user *clacksy.User, passwo
 		return err
 	}
 	return tx.Commit()
+}
+
+func updateUser(ctx context.Context, tx *Tx, id int, upd clacksy.UserUpdate) (*clacksy.User, error) {
+	user, err := findUserByID(ctx, tx, id)
+	if err != nil {
+		return user, err
+	} else if user.UserID != clacksy.UserIDFromContext(ctx) {
+		return nil, clacksy.Errorf(clacksy.EUNAUTHORIZED, "You are not allowed to update this user.")
+	}
+
+	if v := upd.Name; v != nil {
+		user.Name = *v
+	}
+	if v := upd.Email; v != nil {
+		user.Email = *v
+	}
+
+	user.UpdatedAt = tx.now
+
+	if err := user.Validate(); err != nil {
+		return user, err
+	}
+
+	_, err = tx.ExecContext(ctx, `
+		UPDATE user
+		SET name = ?,
+			email = ?,
+			updated_at = ?
+		WHERE user_id = ?
+	`,
+		user.Name,
+		user.Email,
+		(*NullTime)(&user.UpdatedAt),
+		id,
+	)
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
 }
 
 func findUserByID(ctx context.Context, tx *Tx, id int) (*clacksy.User, error) {

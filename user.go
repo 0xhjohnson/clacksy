@@ -30,6 +30,21 @@ func (u *User) Validate() error {
 // UserService represents a service for managing users.
 type UserService interface {
 	CreateUser(ctx context.Context, user *User, password string) error
+
+	// Updates a user object. Returns EUNAUTHORIZED if current user is not
+	// the user that is being updated. Returns ENOTFOUND if user does not exist.
+	UpdateUser(ctx context.Context, id int, upd UserUpdate) (*User, error)
+
+	// Authenticates a user. Returns ENOTFOUND if user does not exist.
+	// Returns EINVALID if credentials are invalid.
 	Authenticate(ctx context.Context, user *User, password string) (*User, error)
+
+	// Retrieves a user by ID along with their associated auth objects.
+	// Returns ENOTFOUND if user does not exist.
 	FindUserByID(ctx context.Context, id int) (*User, error)
+}
+
+type UserUpdate struct {
+	Name  *string
+	Email *string
 }
