@@ -20,7 +20,8 @@ func TestUserService_CreateUser(t *testing.T) {
 		}
 		password := "someadvancedpassword"
 
-		if err := s.CreateUser(context.Background(), u, password); err != nil {
+		err := s.CreateUser(context.Background(), u, password)
+		if err != nil {
 			t.Fatal(err)
 		} else if got, want := u.UserID, 1; got != want {
 			t.Fatalf("UserID=%v, want %v", got, want)
@@ -34,13 +35,15 @@ func TestUserService_CreateUser(t *testing.T) {
 			Email: "somebody@gmail.com",
 		}
 
-		if err := s.CreateUser(context.Background(), u2, "testing123"); err != nil {
+		err = s.CreateUser(context.Background(), u2, "testing123")
+		if err != nil {
 			t.Fatal(err)
 		} else if got, want := u2.UserID, 2; got != want {
 			t.Fatalf("UserID=%v, want %v", got, want)
 		}
 
-		if other, err := s.FindUserByID(context.Background(), 1); err != nil {
+		other, err := s.FindUserByID(context.Background(), 1)
+		if err != nil {
 			t.Fatal(err)
 		} else if !cmp.Equal(u, other) {
 			t.Fatalf("mismatch: %#v != %#v", u, other)
@@ -119,7 +122,8 @@ func TestUserService_UpdateUser(t *testing.T) {
 			t.Fatalf("Email=%v, want %v", got, want)
 		}
 
-		if other, err := s.FindUserByID(context.Background(), 1); err != nil {
+		other, err := s.FindUserByID(context.Background(), 1)
+		if err != nil {
 			t.Fatal(err)
 		} else if !cmp.Equal(uu, other) {
 			t.Fatalf("mismatch: %#v != %#v", uu, other)
@@ -135,7 +139,9 @@ func TestUserService_UpdateUser(t *testing.T) {
 		_, ctx1 := MustCreateUser(t, context.Background(), db, &clacksy.User{Email: "rob@gmail.com"}, "robpassword")
 
 		newName := "newname"
-		if _, err := s.UpdateUser(ctx1, user0.UserID, clacksy.UserUpdate{Name: &newName}); err == nil {
+
+		_, err := s.UpdateUser(ctx1, user0.UserID, clacksy.UserUpdate{Name: &newName})
+		if err == nil {
 			t.Fatal("expected error")
 		} else if clacksy.ErrorCode(err) != clacksy.EUNAUTHORIZED || clacksy.ErrorMessage(err) != `You are not allowed to update this user.` {
 			t.Fatalf("unexpected error: %#v", err)
@@ -157,7 +163,8 @@ func TestUserService_Authenticate(t *testing.T) {
 			Name:  name,
 		}, password)
 
-		if user, err := s.Authenticate(ctx, u, password); err != nil {
+		user, err := s.Authenticate(ctx, u, password)
+		if err != nil {
 			t.Fatal(err)
 		} else if got, want := user.Email, email; got != want {
 			t.Fatalf("Email=%v, want %v", got, want)
@@ -177,7 +184,8 @@ func TestUserService_Authenticate(t *testing.T) {
 			Email: email,
 		}, password)
 
-		if _, err := s.Authenticate(ctx, &clacksy.User{Email: "invalid@gmail.com"}, password); err == nil {
+		_, err := s.Authenticate(ctx, &clacksy.User{Email: "invalid@gmail.com"}, password)
+		if err == nil {
 			t.Fatal("expected error")
 		} else if clacksy.ErrorCode(err) != clacksy.ENOTFOUND || clacksy.ErrorMessage(err) != "User not found." {
 			t.Fatalf("unexpected error: %#v", err)
@@ -198,7 +206,8 @@ func TestUserService_Authenticate(t *testing.T) {
 			Name:  name,
 		}, password)
 
-		if _, err := s.Authenticate(ctx, u, "incorrectpass"); err == nil {
+		_, err := s.Authenticate(ctx, u, "incorrectpass")
+		if err == nil {
 			t.Fatal("expected error")
 		} else if clacksy.ErrorCode(err) != clacksy.EINVALID || clacksy.ErrorMessage(err) != "User credentials invalid." {
 			t.Fatalf("unexpected error: %#v", err)
@@ -212,7 +221,8 @@ func TestUserService_FindUser(t *testing.T) {
 		defer MustCloseDB(t, db)
 		s := sqlite.NewUserService(db)
 
-		if _, err := s.FindUserByID(context.Background(), 1); clacksy.ErrorCode(err) != clacksy.ENOTFOUND {
+		_, err := s.FindUserByID(context.Background(), 1)
+		if clacksy.ErrorCode(err) != clacksy.ENOTFOUND {
 			t.Fatalf("unexpected error: %#v", err)
 		}
 	})
