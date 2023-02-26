@@ -10,7 +10,9 @@ import (
 )
 
 func TestUserService_CreateUser(t *testing.T) {
+	t.Parallel()
 	t.Run("OK", func(t *testing.T) {
+		t.Parallel()
 		db := MustOpenDB(t)
 		defer MustCloseDB(t, db)
 		s := sqlite.NewUserService(db)
@@ -51,6 +53,7 @@ func TestUserService_CreateUser(t *testing.T) {
 	})
 
 	t.Run("ErrEmailRequired", func(t *testing.T) {
+		t.Parallel()
 		db := MustOpenDB(t)
 		defer MustCloseDB(t, db)
 		s := sqlite.NewUserService(db)
@@ -64,6 +67,7 @@ func TestUserService_CreateUser(t *testing.T) {
 	})
 
 	t.Run("ErrPasswordRequired", func(t *testing.T) {
+		t.Parallel()
 		db := MustOpenDB(t)
 		defer MustCloseDB(t, db)
 		s := sqlite.NewUserService(db)
@@ -81,6 +85,7 @@ func TestUserService_CreateUser(t *testing.T) {
 	})
 
 	t.Run("ErrPasswordMinLength", func(t *testing.T) {
+		t.Parallel()
 		db := MustOpenDB(t)
 		defer MustCloseDB(t, db)
 		s := sqlite.NewUserService(db)
@@ -99,7 +104,9 @@ func TestUserService_CreateUser(t *testing.T) {
 }
 
 func TestUserService_UpdateUser(t *testing.T) {
+	t.Parallel()
 	t.Run("OK", func(t *testing.T) {
+		t.Parallel()
 		db := MustOpenDB(t)
 		defer MustCloseDB(t, db)
 		s := sqlite.NewUserService(db)
@@ -131,6 +138,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 	})
 
 	t.Run("ErrUnauthorized", func(t *testing.T) {
+		t.Parallel()
 		db := MustOpenDB(t)
 		defer MustCloseDB(t, db)
 		s := sqlite.NewUserService(db)
@@ -150,7 +158,9 @@ func TestUserService_UpdateUser(t *testing.T) {
 }
 
 func TestUserService_Authenticate(t *testing.T) {
+	t.Parallel()
 	t.Run("OK", func(t *testing.T) {
+		t.Parallel()
 		db := MustOpenDB(t)
 		defer MustCloseDB(t, db)
 		s := sqlite.NewUserService(db)
@@ -174,6 +184,7 @@ func TestUserService_Authenticate(t *testing.T) {
 	})
 
 	t.Run("ErrNotFound", func(t *testing.T) {
+		t.Parallel()
 		db := MustOpenDB(t)
 		defer MustCloseDB(t, db)
 		s := sqlite.NewUserService(db)
@@ -194,6 +205,7 @@ func TestUserService_Authenticate(t *testing.T) {
 	})
 
 	t.Run("ErrInvalidCreds", func(t *testing.T) {
+		t.Parallel()
 		db := MustOpenDB(t)
 		defer MustCloseDB(t, db)
 		s := sqlite.NewUserService(db)
@@ -216,7 +228,9 @@ func TestUserService_Authenticate(t *testing.T) {
 }
 
 func TestUserService_FindUser(t *testing.T) {
+	t.Parallel()
 	t.Run("ErrNotFound", func(t *testing.T) {
+		t.Parallel()
 		db := MustOpenDB(t)
 		defer MustCloseDB(t, db)
 		s := sqlite.NewUserService(db)
