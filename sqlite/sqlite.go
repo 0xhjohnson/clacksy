@@ -174,3 +174,18 @@ func (n *NullTime) Value() (driver.Value, error) {
 	}
 	return (*time.Time)(n).UTC().Format(time.RFC3339), nil
 }
+
+// FormatLimitOffset returns a SQL string for a given limit & offset.
+// Clauses are only added if limit and/or offset are greater than zero.
+func FormatLimitOffset(limit, offset int) string {
+	switch {
+	case limit > 0 && offset > 0:
+		return fmt.Sprintf(`LIMIT %d OFFSET %d`, limit, offset)
+	case limit > 0:
+		return fmt.Sprintf(`LIMIT %d`, limit)
+	case offset > 0:
+		return fmt.Sprintf(`OFFSET %d`, offset)
+	default:
+		return ""
+	}
+}
