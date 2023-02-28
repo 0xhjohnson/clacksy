@@ -74,6 +74,66 @@ func (s *SoundtestService) FindSoundtests(ctx context.Context, filter clacksy.So
 	return soundtests, n, nil
 }
 
+func (s *SoundtestService) FindKeyboards(ctx context.Context) ([]*clacksy.Keyboard, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	keyboards, err := findKeyboards(ctx, tx)
+	if err != nil {
+		return keyboards, err
+	}
+
+	return keyboards, nil
+}
+
+func (s *SoundtestService) FindKeyswitches(ctx context.Context) ([]*clacksy.Keyswitch, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	keyswitches, err := findKeyswitches(ctx, tx)
+	if err != nil {
+		return keyswitches, err
+	}
+
+	return keyswitches, nil
+}
+
+func (s *SoundtestService) FindPlateMaterials(ctx context.Context) ([]*clacksy.PlateMaterial, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	plateMaterials, err := findPlateMaterials(ctx, tx)
+	if err != nil {
+		return plateMaterials, err
+	}
+
+	return plateMaterials, nil
+}
+
+func (s *SoundtestService) FindKeycapMaterials(ctx context.Context) ([]*clacksy.KeycapMaterial, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	keycapMaterials, err := findKeycapMaterials(ctx, tx)
+	if err != nil {
+		return keycapMaterials, err
+	}
+
+	return keycapMaterials, nil
+}
+
 func (s *SoundtestService) CreateKeyboard(ctx context.Context, keyboard *clacksy.Keyboard) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -254,6 +314,140 @@ func findSoundtests(ctx context.Context, tx *Tx, filter clacksy.SoundtestFilter)
 	}
 
 	return soundtests, n, nil
+}
+
+func findKeyboards(ctx context.Context, tx *Tx) ([]*clacksy.Keyboard, error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			keyboard_id,
+			name
+		FROM keyboard
+		ORDER BY name ASC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	keyboards := make([]*clacksy.Keyboard, 0)
+	for rows.Next() {
+		var keyboard clacksy.Keyboard
+
+		err := rows.Scan(&keyboard.KeyboardID, &keyboard.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		keyboards = append(keyboards, &keyboard)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return keyboards, nil
+}
+
+func findKeyswitches(ctx context.Context, tx *Tx) ([]*clacksy.Keyswitch, error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			k.keyswitch_id,
+			k.name,
+			k.keyswitch_type_id,
+			kt.name keyswitch_type
+		FROM keyswitch k
+		JOIN keyswitch_type kt USING (keyswitch_type_id)
+		ORDER BY k.name ASC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	switches := make([]*clacksy.Keyswitch, 0)
+	for rows.Next() {
+		keyswitch := &clacksy.Keyswitch{
+			KeyswitchType: &clacksy.KeyswitchType{},
+		}
+
+		err := rows.Scan(
+			&keyswitch.KeyswitchID,
+			&keyswitch.Name,
+			&keyswitch.KeyswitchType.KeyswitchTypeID,
+			&keyswitch.KeyswitchType.Name,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		switches = append(switches, keyswitch)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return switches, nil
+}
+
+func findPlateMaterials(ctx context.Context, tx *Tx) ([]*clacksy.PlateMaterial, error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			plate_material_id,
+			name
+		FROM plate_material
+		ORDER BY name ASC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	plateMaterials := make([]*clacksy.PlateMaterial, 0)
+	for rows.Next() {
+		var plateMaterial clacksy.PlateMaterial
+
+		err := rows.Scan(&plateMaterial.PlateMaterialID, &plateMaterial.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		plateMaterials = append(plateMaterials, &plateMaterial)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return plateMaterials, nil
+}
+
+func findKeycapMaterials(ctx context.Context, tx *Tx) ([]*clacksy.KeycapMaterial, error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			keycap_material_id,
+			name
+		FROM keycap_material
+		ORDER BY name ASC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	keycapMaterials := make([]*clacksy.KeycapMaterial, 0)
+	for rows.Next() {
+		var keycapMaterial clacksy.KeycapMaterial
+
+		err := rows.Scan(&keycapMaterial.KeycapMaterialID, &keycapMaterial.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		keycapMaterials = append(keycapMaterials, &keycapMaterial)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return keycapMaterials, nil
 }
 
 func createKeyboard(ctx context.Context, tx *Tx, keyboard *clacksy.Keyboard) error {

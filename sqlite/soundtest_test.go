@@ -349,6 +349,98 @@ func TestSoundtestService_FindSoundtests(t *testing.T) {
 	})
 }
 
+func TestSoundtestService_FindKeyboards(t *testing.T) {
+	t.Run("OK", func(t *testing.T) {
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		ctx := context.Background()
+		k1 := MustCreateKeyboard(t, ctx, db, &clacksy.Keyboard{Name: "mode sonnet"})
+		k2 := MustCreateKeyboard(t, ctx, db, &clacksy.Keyboard{Name: "unikorn"})
+
+		s := sqlite.NewSoundtestService(db)
+		keebs, err := s.FindKeyboards(ctx)
+		if err != nil {
+			t.Fatal(err)
+		} else if got, want := len(keebs), 2; got != want {
+			t.Fatalf("len=%v, want %v", got, want)
+		} else if !cmp.Equal(keebs[0], k1) {
+			t.Fatalf("mismatch: %#v != %#v", keebs[0], k1)
+		} else if !cmp.Equal(keebs[1], k2) {
+			t.Fatalf("mismatch: %#v != %#v", keebs[1], k2)
+		}
+	})
+}
+
+func TestSoundtestService_FindKeyswitches(t *testing.T) {
+	t.Run("OK", func(t *testing.T) {
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		ctx := context.Background()
+		k1 := MustCreateKeyswitch(t, ctx, db, &clacksy.Keyswitch{Name: "boba lt", KeyswitchType: &clacksy.KeyswitchType{Name: "linear"}})
+		k2 := MustCreateKeyswitch(t, ctx, db, &clacksy.Keyswitch{Name: "gateron yellow", KeyswitchType: &clacksy.KeyswitchType{Name: "tactile"}})
+
+		s := sqlite.NewSoundtestService(db)
+		switches, err := s.FindKeyswitches(ctx)
+		if err != nil {
+			t.Fatal(err)
+		} else if got, want := len(switches), 2; got != want {
+			t.Fatalf("len=%v, want %v", got, want)
+		} else if !cmp.Equal(switches[0], k1) {
+			t.Fatalf("mismatch: %#v != %#v", switches[0], k1)
+		} else if !cmp.Equal(switches[1], k2) {
+			t.Fatalf("mismatch: %#v != %#v", switches[1], k2)
+		}
+	})
+}
+
+func TestSoundtestService_FindPlateMaterials(t *testing.T) {
+	t.Run("OK", func(t *testing.T) {
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		ctx := context.Background()
+		k1 := MustCreatePlateMaterial(t, ctx, db, &clacksy.PlateMaterial{Name: "alu"})
+		k2 := MustCreatePlateMaterial(t, ctx, db, &clacksy.PlateMaterial{Name: "pom"})
+
+		s := sqlite.NewSoundtestService(db)
+		plateMaterials, err := s.FindPlateMaterials(ctx)
+		if err != nil {
+			t.Fatal(err)
+		} else if got, want := len(plateMaterials), 2; got != want {
+			t.Fatalf("len=%v, want %v", got, want)
+		} else if !cmp.Equal(plateMaterials[0], k1) {
+			t.Fatalf("mismatch: %#v != %#v", plateMaterials[0], k1)
+		} else if !cmp.Equal(plateMaterials[1], k2) {
+			t.Fatalf("mismatch: %#v != %#v", plateMaterials[1], k2)
+		}
+	})
+}
+
+func TestSoundtestService_FindKeycapMaterials(t *testing.T) {
+	t.Run("OK", func(t *testing.T) {
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		ctx := context.Background()
+		k1 := MustCreateKeycapMaterial(t, ctx, db, &clacksy.KeycapMaterial{Name: "abs"})
+		k2 := MustCreateKeycapMaterial(t, ctx, db, &clacksy.KeycapMaterial{Name: "pbt"})
+
+		s := sqlite.NewSoundtestService(db)
+		keycapMaterials, err := s.FindKeycapMaterials(ctx)
+		if err != nil {
+			t.Fatal(err)
+		} else if got, want := len(keycapMaterials), 2; got != want {
+			t.Fatalf("len=%v, want %v", got, want)
+		} else if !cmp.Equal(keycapMaterials[0], k1) {
+			t.Fatalf("mismatch: %#v != %#v", keycapMaterials[0], k1)
+		} else if !cmp.Equal(keycapMaterials[1], k2) {
+			t.Fatalf("mismatch: %#v != %#v", keycapMaterials[1], k2)
+		}
+	})
+}
+
 func MustFindSoundtestByID(tb testing.TB, ctx context.Context, db *sqlite.DB, soundtestID int) *clacksy.Soundtest {
 	tb.Helper()
 	soundtest, err := sqlite.NewSoundtestService(db).FindSoundtestByID(ctx, soundtestID)

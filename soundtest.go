@@ -41,6 +41,11 @@ type SoundtestService interface {
 	// soundtests if "Limit" field is set.
 	FindSoundtests(ctx context.Context, filter SoundtestFilter) ([]*Soundtest, int, error)
 
+	FindKeyboards(ctx context.Context) ([]*Keyboard, error)
+	FindKeyswitches(ctx context.Context) ([]*Keyswitch, error)
+	FindPlateMaterials(ctx context.Context) ([]*PlateMaterial, error)
+	FindKeycapMaterials(ctx context.Context) ([]*KeycapMaterial, error)
+
 	// These are primarily only used in tests.
 	CreateKeyswitch(ctx context.Context, keyswitch *Keyswitch) error
 	CreateKeyboard(ctx context.Context, keyboard *Keyboard) error
