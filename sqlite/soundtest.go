@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"strings"
 
 	"github.com/0xhjohnson/clacksy"
@@ -74,14 +75,14 @@ func (s *SoundtestService) FindSoundtests(ctx context.Context, filter clacksy.So
 	return soundtests, n, nil
 }
 
-func (s *SoundtestService) FindKeyboards(ctx context.Context) ([]*clacksy.Keyboard, error) {
+func (s *SoundtestService) FindKeyboards(ctx context.Context, filter clacksy.KeyboardFilter) ([]*clacksy.Keyboard, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	keyboards, err := findKeyboards(ctx, tx)
+	keyboards, err := findKeyboards(ctx, tx, filter)
 	if err != nil {
 		return keyboards, err
 	}
@@ -89,14 +90,14 @@ func (s *SoundtestService) FindKeyboards(ctx context.Context) ([]*clacksy.Keyboa
 	return keyboards, nil
 }
 
-func (s *SoundtestService) FindKeyswitches(ctx context.Context) ([]*clacksy.Keyswitch, error) {
+func (s *SoundtestService) FindKeyswitches(ctx context.Context, filter clacksy.KeyswitchFilter) ([]*clacksy.Keyswitch, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	keyswitches, err := findKeyswitches(ctx, tx)
+	keyswitches, err := findKeyswitches(ctx, tx, filter)
 	if err != nil {
 		return keyswitches, err
 	}
@@ -104,14 +105,14 @@ func (s *SoundtestService) FindKeyswitches(ctx context.Context) ([]*clacksy.Keys
 	return keyswitches, nil
 }
 
-func (s *SoundtestService) FindPlateMaterials(ctx context.Context) ([]*clacksy.PlateMaterial, error) {
+func (s *SoundtestService) FindPlateMaterials(ctx context.Context, filter clacksy.PlateMaterialFilter) ([]*clacksy.PlateMaterial, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	plateMaterials, err := findPlateMaterials(ctx, tx)
+	plateMaterials, err := findPlateMaterials(ctx, tx, filter)
 	if err != nil {
 		return plateMaterials, err
 	}
@@ -119,14 +120,14 @@ func (s *SoundtestService) FindPlateMaterials(ctx context.Context) ([]*clacksy.P
 	return plateMaterials, nil
 }
 
-func (s *SoundtestService) FindKeycapMaterials(ctx context.Context) ([]*clacksy.KeycapMaterial, error) {
+func (s *SoundtestService) FindKeycapMaterials(ctx context.Context, filter clacksy.KeycapMaterialFilter) ([]*clacksy.KeycapMaterial, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	keycapMaterials, err := findKeycapMaterials(ctx, tx)
+	keycapMaterials, err := findKeycapMaterials(ctx, tx, filter)
 	if err != nil {
 		return keycapMaterials, err
 	}
@@ -316,14 +317,29 @@ func findSoundtests(ctx context.Context, tx *Tx, filter clacksy.SoundtestFilter)
 	return soundtests, n, nil
 }
 
-func findKeyboards(ctx context.Context, tx *Tx) ([]*clacksy.Keyboard, error) {
+func findKeyboards(ctx context.Context, tx *Tx, filter clacksy.KeyboardFilter) ([]*clacksy.Keyboard, error) {
+	where, args := []string{"1 = 1"}, []interface{}{}
+	keebFilter := filter.KeyboardID
+	if keebFilter != nil {
+		stmt := `keyboard_id = ? OR
+				 keyboard_id IN (
+					SELECT keyboard_id
+					FROM keyboard
+					WHERE keyboard_id != ?
+					ORDER BY RANDOM()
+					LIMIT 3
+				 )`
+		where, args = append(where, stmt), append(args, *keebFilter, *keebFilter)
+	}
+
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
 			keyboard_id,
 			name
 		FROM keyboard
-		ORDER BY name ASC
-	`)
+		WHERE `+strings.Join(where, " AND "),
+		args...,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -344,10 +360,30 @@ func findKeyboards(ctx context.Context, tx *Tx) ([]*clacksy.Keyboard, error) {
 		return nil, err
 	}
 
+	if keebFilter != nil {
+		rand.Shuffle(len(keyboards), func(i, j int) {
+			keyboards[i], keyboards[j] = keyboards[j], keyboards[i]
+		})
+	}
+
 	return keyboards, nil
 }
 
-func findKeyswitches(ctx context.Context, tx *Tx) ([]*clacksy.Keyswitch, error) {
+func findKeyswitches(ctx context.Context, tx *Tx, filter clacksy.KeyswitchFilter) ([]*clacksy.Keyswitch, error) {
+	where, args := []string{"1 = 1"}, []interface{}{}
+	switchFilter := filter.KeyswitchID
+	if switchFilter != nil {
+		stmt := `keyswitch_id = ? OR
+				 keyswitch_id IN (
+					SELECT keyswitch_id
+					FROM keyswitch
+					WHERE keyswitch_id != ?
+					ORDER BY RANDOM()
+					LIMIT 3
+				 )`
+		where, args = append(where, stmt), append(args, *switchFilter, *switchFilter)
+	}
+
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
 			k.keyswitch_id,
@@ -355,9 +391,10 @@ func findKeyswitches(ctx context.Context, tx *Tx) ([]*clacksy.Keyswitch, error) 
 			k.keyswitch_type_id,
 			kt.name keyswitch_type
 		FROM keyswitch k
-		JOIN keyswitch_type kt USING (keyswitch_type_id)
-		ORDER BY k.name ASC
-	`)
+		RIGHT JOIN keyswitch_type kt USING (keyswitch_type_id)
+		WHERE `+strings.Join(where, " AND "),
+		args...,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -385,17 +422,38 @@ func findKeyswitches(ctx context.Context, tx *Tx) ([]*clacksy.Keyswitch, error) 
 		return nil, err
 	}
 
+	if switchFilter != nil {
+		rand.Shuffle(len(switches), func(i, j int) {
+			switches[i], switches[j] = switches[j], switches[i]
+		})
+	}
+
 	return switches, nil
 }
 
-func findPlateMaterials(ctx context.Context, tx *Tx) ([]*clacksy.PlateMaterial, error) {
+func findPlateMaterials(ctx context.Context, tx *Tx, filter clacksy.PlateMaterialFilter) ([]*clacksy.PlateMaterial, error) {
+	where, args := []string{"1 = 1"}, []interface{}{}
+	plateMatFilter := filter.PlateMaterialID
+	if plateMatFilter != nil {
+		stmt := `plate_material_id = ? OR
+				 plate_material_id IN (
+					SELECT plate_material_id
+					FROM plate_material
+					WHERE plate_material_id != ?
+					ORDER BY RANDOM()
+					LIMIT 3
+				 )`
+		where, args = append(where, stmt), append(args, *plateMatFilter, *plateMatFilter)
+	}
+
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
 			plate_material_id,
 			name
 		FROM plate_material
-		ORDER BY name ASC
-	`)
+		WHERE `+strings.Join(where, " AND "),
+		args...,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -416,17 +474,38 @@ func findPlateMaterials(ctx context.Context, tx *Tx) ([]*clacksy.PlateMaterial, 
 		return nil, err
 	}
 
+	if plateMatFilter != nil {
+		rand.Shuffle(len(plateMaterials), func(i, j int) {
+			plateMaterials[i], plateMaterials[j] = plateMaterials[j], plateMaterials[i]
+		})
+	}
+
 	return plateMaterials, nil
 }
 
-func findKeycapMaterials(ctx context.Context, tx *Tx) ([]*clacksy.KeycapMaterial, error) {
+func findKeycapMaterials(ctx context.Context, tx *Tx, filter clacksy.KeycapMaterialFilter) ([]*clacksy.KeycapMaterial, error) {
+	where, args := []string{"1 = 1"}, []interface{}{}
+	keycapMatFilter := filter.KeycapMaterialID
+	if keycapMatFilter != nil {
+		stmt := `keycap_material_id = ? OR
+				 keycap_material_id IN (
+					SELECT keycap_material_id
+					FROM keycap_material
+					WHERE keycap_material_id != ?
+					ORDER BY RANDOM()
+					LIMIT 3
+				 )`
+		where, args = append(where, stmt), append(args, *keycapMatFilter, *keycapMatFilter)
+	}
+
 	rows, err := tx.QueryContext(ctx, `
 		SELECT
 			keycap_material_id,
 			name
 		FROM keycap_material
-		ORDER BY name ASC
-	`)
+		WHERE `+strings.Join(where, " AND "),
+		args...,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -445,6 +524,12 @@ func findKeycapMaterials(ctx context.Context, tx *Tx) ([]*clacksy.KeycapMaterial
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
+	}
+
+	if keycapMatFilter != nil {
+		rand.Shuffle(len(keycapMaterials), func(i, j int) {
+			keycapMaterials[i], keycapMaterials[j] = keycapMaterials[j], keycapMaterials[i]
+		})
 	}
 
 	return keycapMaterials, nil

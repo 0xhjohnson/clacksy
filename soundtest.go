@@ -41,10 +41,21 @@ type SoundtestService interface {
 	// soundtests if "Limit" field is set.
 	FindSoundtests(ctx context.Context, filter SoundtestFilter) ([]*Soundtest, int, error)
 
-	FindKeyboards(ctx context.Context) ([]*Keyboard, error)
-	FindKeyswitches(ctx context.Context) ([]*Keyswitch, error)
-	FindPlateMaterials(ctx context.Context) ([]*PlateMaterial, error)
-	FindKeycapMaterials(ctx context.Context) ([]*KeycapMaterial, error)
+	// Retrieves a list of keyboards based on a filter. The filter is used to
+	// retrieve the correct keyboard (filter.KeyboardID) along with 3 others.
+	FindKeyboards(ctx context.Context, filter KeyboardFilter) ([]*Keyboard, error)
+
+	// Retrieves a list of keyswitches based on a filter. The filter is used to
+	// retrieve the correct keyswitch (filter.KeyswitchID) along with 3 others.
+	FindKeyswitches(ctx context.Context, filter KeyswitchFilter) ([]*Keyswitch, error)
+
+	// Retrieves a list of plate materials based on a filter. The filter is used to
+	// retrieve the correct plate material (filter.PlateMaterialID) along with 3 others.
+	FindPlateMaterials(ctx context.Context, filter PlateMaterialFilter) ([]*PlateMaterial, error)
+
+	// Retrieves a list of keycap materials based on a filter. The filter is used to
+	// retrieve the correct keycap material (filter.KeycapMaterialID) along with 3 others.
+	FindKeycapMaterials(ctx context.Context, filter KeycapMaterialFilter) ([]*KeycapMaterial, error)
 
 	// These are primarily only used in tests.
 	CreateKeyswitch(ctx context.Context, keyswitch *Keyswitch) error
@@ -76,6 +87,22 @@ type SoundtestFilter struct {
 
 	Offset int
 	Limit  int
+}
+
+type KeyboardFilter struct {
+	KeyboardID *int
+}
+
+type KeyswitchFilter struct {
+	KeyswitchID *int
+}
+
+type KeycapMaterialFilter struct {
+	KeycapMaterialID *int
+}
+
+type PlateMaterialFilter struct {
+	PlateMaterialID *int
 }
 
 type Keyboard struct {
