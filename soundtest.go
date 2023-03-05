@@ -31,6 +31,7 @@ type Soundtest struct {
 // SoundtestService represents a service for managing soundtests.
 type SoundtestService interface {
 	CreateSoundtest(ctx context.Context, soundtest *Soundtest) error
+	UpsertVote(ctx context.Context, vote *SoundtestVote) error
 
 	// Retrieves a single soundtest by ID. Returns ENOTFOUND if soundtest does
 	// not exist.
@@ -81,12 +82,30 @@ func (s *Soundtest) Validate() error {
 	}
 }
 
+func (sv *SoundtestVote) Validate() error {
+	switch {
+	case sv.SoundtestID == 0:
+		return Errorf(EINVALID, "Soundtest ID is required.")
+	case sv.VoteType < -1 || sv.VoteType > 1:
+		return Errorf(EINVALID, "Soundtest vote type must be -1, 0, or 1.")
+	default:
+		return nil
+	}
+}
+
 type SoundtestFilter struct {
 	SoundtestID *int
 	UserID      *int
 
 	Offset int
 	Limit  int
+}
+
+type SoundtestVote struct {
+	SoundtestID int
+	UserID      int
+	VoteType    int
+	UpdatedAt   time.Time
 }
 
 type KeyboardFilter struct {

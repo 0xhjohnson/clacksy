@@ -38,6 +38,20 @@ func (s *SoundtestService) CreateSoundtest(ctx context.Context, soundtest *clack
 	return tx.Commit()
 }
 
+func (s *SoundtestService) UpsertVote(ctx context.Context, vote *clacksy.SoundtestVote) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := upsertVote(ctx, tx, vote); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (s *SoundtestService) FindSoundtestByID(ctx context.Context, soundtestID int) (*clacksy.Soundtest, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -249,6 +263,39 @@ func createSoundtest(ctx context.Context, tx *Tx, soundtest *clacksy.Soundtest) 
 		return err
 	}
 	soundtest.SoundtestID = int(id)
+
+	return nil
+}
+
+func upsertVote(ctx context.Context, tx *Tx, vote *clacksy.SoundtestVote) error {
+	userID := clacksy.UserIDFromContext(ctx)
+	if userID == 0 {
+		return clacksy.Errorf(clacksy.EUNAUTHORIZED, "You must be logged in to vote.")
+	}
+	vote.UserID = clacksy.UserIDFromContext(ctx)
+
+	vote.UpdatedAt = tx.now
+
+	if err := vote.Validate(); err != nil {
+		return err
+	} else if _, err := findUserByID(ctx, tx, vote.UserID); err != nil {
+		return err
+	}
+
+	_, err := tx.ExecContext(ctx, `
+		INSERT INTO vote (soundtest_id, user_id, vote_type, updated_at)
+		VALUES (?, ?, ?, ?)
+		ON CONFLICT (soundtest_id, user_id)
+		DO UPDATE SET vote_type = excluded.vote_type
+	`,
+		vote.SoundtestID,
+		vote.UserID,
+		vote.VoteType,
+		(*NullTime)(&vote.UpdatedAt),
+	)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

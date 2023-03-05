@@ -62,8 +62,7 @@ CREATE TABLE vote (
 	soundtest_id INTEGER NOT NULL REFERENCES soundtest,
 	user_id INTEGER NOT NULL REFERENCES user,
 	vote_type INTEGER NOT NULL DEFAULT 0,
-	created_at TEXT NOT NULL, 
-
+	updated_at TEXT NOT NULL,
 
 	PRIMARY KEY(soundtest_id, user_id),
 	CHECK(vote_type IN (-1, 0, 1))

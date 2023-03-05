@@ -167,6 +167,202 @@ func TestSoundtestService_CreateSoundtest(t *testing.T) {
 	}
 }
 
+func TestSoundtestService_UpsertVote(t *testing.T) {
+	t.Parallel()
+	t.Run("OK", func(t *testing.T) {
+		t.Parallel()
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		ctx := context.Background()
+		_, ctx0 := MustCreateUser(t, ctx, db, &clacksy.User{Name: "john", Email: "john@gmail.com"}, "mypassword")
+
+		keyboard := MustCreateKeyboard(t, ctx, db, &clacksy.Keyboard{Name: "mode sonnet"})
+		keyswitch := MustCreateKeyswitch(t, ctx, db, &clacksy.Keyswitch{Name: "boba lt", KeyswitchType: &clacksy.KeyswitchType{Name: "linear"}})
+		keycapMaterial := MustCreateKeycapMaterial(t, ctx, db, &clacksy.KeycapMaterial{Name: "abs"})
+		plateMaterial := MustCreatePlateMaterial(t, ctx, db, &clacksy.PlateMaterial{Name: "pom"})
+
+		soundtest := &clacksy.Soundtest{
+			URL:              "/soundtests/sonnet.mp4",
+			KeyboardID:       keyboard.KeyboardID,
+			KeyswitchID:      keyswitch.KeyswitchID,
+			KeycapMaterialID: keycapMaterial.KeycapMaterialID,
+			PlateMaterialID:  plateMaterial.PlateMaterialID,
+		}
+		MustCreateSoundtest(t, ctx0, db, soundtest)
+
+		vote := &clacksy.SoundtestVote{
+			SoundtestID: soundtest.SoundtestID,
+			VoteType:    1,
+		}
+
+		s := sqlite.NewSoundtestService(db)
+
+		err := s.UpsertVote(ctx0, vote)
+		if err != nil {
+			t.Fatal(err)
+		} else if got, want := vote.SoundtestID, 1; got != want {
+			t.Fatalf("SoundtestID=%v, want %v", got, want)
+		} else if got, want := vote.UserID, 1; got != want {
+			t.Fatalf("UserID=%v, want %v", got, want)
+		} else if vote.VoteType != 1 {
+			t.Fatalf("VoteType=%v, want %v", vote.VoteType, 1)
+		} else if soundtest.UpdatedAt.IsZero() {
+			t.Fatal("expected updated at")
+		}
+	})
+
+	t.Run("Update", func(t *testing.T) {
+		t.Parallel()
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		ctx := context.Background()
+		_, ctx0 := MustCreateUser(t, ctx, db, &clacksy.User{Name: "john", Email: "john@gmail.com"}, "mypassword")
+
+		keyboard := MustCreateKeyboard(t, ctx, db, &clacksy.Keyboard{Name: "mode sonnet"})
+		keyswitch := MustCreateKeyswitch(t, ctx, db, &clacksy.Keyswitch{Name: "boba lt", KeyswitchType: &clacksy.KeyswitchType{Name: "linear"}})
+		keycapMaterial := MustCreateKeycapMaterial(t, ctx, db, &clacksy.KeycapMaterial{Name: "abs"})
+		plateMaterial := MustCreatePlateMaterial(t, ctx, db, &clacksy.PlateMaterial{Name: "pom"})
+
+		soundtest := &clacksy.Soundtest{
+			URL:              "/soundtests/sonnet.mp4",
+			KeyboardID:       keyboard.KeyboardID,
+			KeyswitchID:      keyswitch.KeyswitchID,
+			KeycapMaterialID: keycapMaterial.KeycapMaterialID,
+			PlateMaterialID:  plateMaterial.PlateMaterialID,
+		}
+		MustCreateSoundtest(t, ctx0, db, soundtest)
+
+		vote := &clacksy.SoundtestVote{
+			SoundtestID: soundtest.SoundtestID,
+			VoteType:    1,
+		}
+
+		s := sqlite.NewSoundtestService(db)
+
+		err := s.UpsertVote(ctx0, vote)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		vote = &clacksy.SoundtestVote{
+			SoundtestID: soundtest.SoundtestID,
+			VoteType:    -1,
+		}
+
+		err = s.UpsertVote(ctx0, vote)
+		if err != nil {
+			t.Fatal(err)
+		} else if got, want := vote.SoundtestID, 1; got != want {
+			t.Fatalf("SoundtestID=%v, want %v", got, want)
+		} else if got, want := vote.UserID, 1; got != want {
+			t.Fatalf("UserID=%v, want %v", got, want)
+		} else if vote.VoteType != -1 {
+			t.Fatalf("VoteType=%v, want %v", vote.VoteType, -1)
+		} else if soundtest.UpdatedAt.IsZero() {
+			t.Fatal("expected updated at")
+		}
+	})
+
+	t.Run("ErrSoundtestRequired", func(t *testing.T) {
+		t.Parallel()
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		ctx := context.Background()
+		_, ctx0 := MustCreateUser(t, ctx, db, &clacksy.User{Name: "john", Email: "john@gmail.com"}, "mypassword")
+
+		vote := &clacksy.SoundtestVote{
+			SoundtestID: 0,
+			VoteType:    0,
+		}
+
+		s := sqlite.NewSoundtestService(db)
+
+		err := s.UpsertVote(ctx0, vote)
+		if err == nil {
+			t.Fatal("expected error")
+		} else if clacksy.ErrorCode(err) != clacksy.EINVALID || clacksy.ErrorMessage(err) != "Soundtest ID is required." {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("ErrVoteTypeInvalid", func(t *testing.T) {
+		t.Parallel()
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		ctx := context.Background()
+		_, ctx0 := MustCreateUser(t, ctx, db, &clacksy.User{Name: "john", Email: "john@gmail.com"}, "mypassword")
+
+		keyboard := MustCreateKeyboard(t, ctx, db, &clacksy.Keyboard{Name: "mode sonnet"})
+		keyswitch := MustCreateKeyswitch(t, ctx, db, &clacksy.Keyswitch{Name: "boba lt", KeyswitchType: &clacksy.KeyswitchType{Name: "linear"}})
+		keycapMaterial := MustCreateKeycapMaterial(t, ctx, db, &clacksy.KeycapMaterial{Name: "abs"})
+		plateMaterial := MustCreatePlateMaterial(t, ctx, db, &clacksy.PlateMaterial{Name: "pom"})
+
+		soundtest := &clacksy.Soundtest{
+			URL:              "/soundtests/sonnet.mp4",
+			KeyboardID:       keyboard.KeyboardID,
+			KeyswitchID:      keyswitch.KeyswitchID,
+			KeycapMaterialID: keycapMaterial.KeycapMaterialID,
+			PlateMaterialID:  plateMaterial.PlateMaterialID,
+		}
+		MustCreateSoundtest(t, ctx0, db, soundtest)
+
+		vote := &clacksy.SoundtestVote{
+			SoundtestID: soundtest.SoundtestID,
+			VoteType:    -2,
+		}
+
+		s := sqlite.NewSoundtestService(db)
+
+		err := s.UpsertVote(ctx0, vote)
+		if err == nil {
+			t.Fatal("expected error")
+		} else if clacksy.ErrorCode(err) != clacksy.EINVALID || clacksy.ErrorMessage(err) != "Soundtest vote type must be -1, 0, or 1." {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("ErrUserInvalid", func(t *testing.T) {
+		t.Parallel()
+		db := MustOpenDB(t)
+		defer MustCloseDB(t, db)
+
+		ctx := context.Background()
+		_, ctx0 := MustCreateUser(t, ctx, db, &clacksy.User{Name: "john", Email: "john@gmail.com"}, "mypassword")
+
+		keyboard := MustCreateKeyboard(t, ctx, db, &clacksy.Keyboard{Name: "mode sonnet"})
+		keyswitch := MustCreateKeyswitch(t, ctx, db, &clacksy.Keyswitch{Name: "boba lt", KeyswitchType: &clacksy.KeyswitchType{Name: "linear"}})
+		keycapMaterial := MustCreateKeycapMaterial(t, ctx, db, &clacksy.KeycapMaterial{Name: "abs"})
+		plateMaterial := MustCreatePlateMaterial(t, ctx, db, &clacksy.PlateMaterial{Name: "pom"})
+
+		soundtest := &clacksy.Soundtest{
+			URL:              "/soundtests/sonnet.mp4",
+			KeyboardID:       keyboard.KeyboardID,
+			KeyswitchID:      keyswitch.KeyswitchID,
+			KeycapMaterialID: keycapMaterial.KeycapMaterialID,
+			PlateMaterialID:  plateMaterial.PlateMaterialID,
+		}
+		MustCreateSoundtest(t, ctx0, db, soundtest)
+
+		vote := &clacksy.SoundtestVote{
+			SoundtestID: soundtest.SoundtestID,
+			VoteType:    0,
+		}
+
+		s := sqlite.NewSoundtestService(db)
+
+		err := s.UpsertVote(ctx, vote)
+		if err == nil {
+			t.Fatal("expected error")
+		} else if clacksy.ErrorCode(err) != clacksy.EUNAUTHORIZED || clacksy.ErrorMessage(err) != "You must be logged in to vote." {
+			t.Fatal(err)
+		}
+	})
+}
+
 func TestSoundtestService_FindSoundtests(t *testing.T) {
 	t.Parallel()
 	t.Run("OK", func(t *testing.T) {
