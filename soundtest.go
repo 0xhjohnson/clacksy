@@ -10,6 +10,8 @@ type Soundtest struct {
 	SoundtestID int
 	UserID      int
 	User        *User
+	UserVote    int
+	TotalVotes  int
 	// Location of the soundtest audio file
 	URL string
 

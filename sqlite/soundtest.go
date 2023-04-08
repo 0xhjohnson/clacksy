@@ -301,9 +301,15 @@ func upsertVote(ctx context.Context, tx *Tx, vote *clacksy.SoundtestVote) error 
 }
 
 func findSoundtests(ctx context.Context, tx *Tx, filter clacksy.SoundtestFilter) (_ []*clacksy.Soundtest, n int, err error) {
+	userID := clacksy.UserIDFromContext(ctx)
+	if userID == 0 {
+		return nil, 0, clacksy.Errorf(clacksy.EUNAUTHORIZED, "You must be logged in to browse soundtests.")
+	}
+
 	// Build WHERE clause. Each part of the WHERE clause is AND-ed together.
 	// Values are appended to an arg list to avoid SQL injection.
 	where, args := []string{"1 = 1"}, []interface{}{}
+	args = append(args, userID)
 	if v := filter.SoundtestID; v != nil {
 		where, args = append(where, "soundtest_id = ?"), append(args, *v)
 	} else if v := filter.UserID; v != nil {
@@ -322,10 +328,20 @@ func findSoundtests(ctx context.Context, tx *Tx, filter clacksy.SoundtestFilter)
 			featured_on,
 			created_at,
 			updated_at,
+			COALESCE(
+				(SELECT vote_type
+				 FROM vote
+				 WHERE
+					vote.soundtest_id = soundtest.soundtest_id AND
+					vote.user_id = ?), 0
+			) as user_vote,
+			(SELECT COALESCE(SUM(vote_type), 0)
+			 FROM vote
+			 WHERE vote.soundtest_id = soundtest.soundtest_id) as total_votes,
 			COUNT(*) OVER()
 		FROM soundtest
 		WHERE `+strings.Join(where, " AND ")+`
-		ORDER BY user_id ASC
+		ORDER BY created_at DESC
 		`+FormatLimitOffset(filter.Limit, filter.Offset),
 		args...,
 	)
@@ -349,6 +365,8 @@ func findSoundtests(ctx context.Context, tx *Tx, filter clacksy.SoundtestFilter)
 			(*NullTime)(&soundtest.FeaturedOn),
 			(*NullTime)(&soundtest.CreatedAt),
 			(*NullTime)(&soundtest.UpdatedAt),
+			&soundtest.UserVote,
+			&soundtest.TotalVotes,
 			&n,
 		)
 		if err != nil {
